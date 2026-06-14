@@ -720,8 +720,11 @@ async function buildShareCanvas(cards){
   const H=HEADER + rows*(CARD_H+LABEL+GAP) + PAD + SUMM_H + FOOTER;
 
   const cv=document.getElementById('share-canvas');
-  cv.width=W; cv.height=H;
+  const dpr=window.devicePixelRatio||1;
+  cv.width=W*dpr; cv.height=H*dpr;
+  cv.style.width=W+'px'; cv.style.height=H+'px';
   const ctx=cv.getContext('2d');
+  ctx.scale(dpr,dpr);
 
   // Background
   const bg=ctx.createLinearGradient(0,0,0,H);
