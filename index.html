@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meaning Tarot — ทำนายดวงชะตา</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=Sarabun:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05050f;--bg2:#0d0d24;--bg3:#15153a;--bg4:#1c1c48;
+  --gold:#d4af37;--gold-l:#f3d878;--gold-d:#9a7d20;
+  --text:#f0e8d8;--text2:#c3b48f;--dim:#7a7060;
+  --parchment:#f8f0dc;--parch2:#e8d8b0;--inkbrown:#3a2008;
+  --fire:#c8341f;--water:#1e54b0;--air:#806030;--earth:#2a6020;--spirit:#5a14a0;
+  --fire-l:#f06a2a;--water-l:#39a0d8;--air-l:#c0a050;--earth-l:#52a84e;--spirit-l:#9c3ce0;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;overflow-x:hidden;
+  background-image:radial-gradient(ellipse at top,#1a1040 0%,#0d0d24 40%,#05050f 100%);background-attachment:fixed}
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+.app{position:relative;z-index:1}
+.screen{display:none;min-height:100vh;flex-direction:column;align-items:center;padding:2rem 1rem 4rem}
+.screen.active{display:flex;animation:fadeIn .5s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* === HEADINGS === */
+.title{font-family:'Cinzel Decorative',serif;font-weight:700;text-align:center;
+  background:linear-gradient(135deg,var(--gold-l),var(--gold),var(--gold-d));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 2px 8px rgba(212,175,55,.35));letter-spacing:1px}
+h1.title{font-size:clamp(2rem,7vw,3.4rem);margin-bottom:.3rem}
+.subtitle{font-family:'Cinzel',serif;color:var(--text2);text-align:center;
+  font-size:clamp(.82rem,2.2vw,1rem);letter-spacing:3px;text-transform:uppercase;margin-bottom:1.2rem}
+.divider{display:flex;align-items:center;justify-content:center;gap:.8rem;margin:1rem 0;width:100%;max-width:420px}
+.divider::before,.divider::after{content:'';height:1px;flex:1;
+  background:linear-gradient(90deg,transparent,var(--gold-d),transparent)}
+.divider span{color:var(--gold)}
+
+/* === HOME === */
+.intro{max-width:560px;text-align:center;color:var(--text2);line-height:1.9;font-size:.93rem;margin-bottom:1.8rem;font-weight:300;opacity:.85}
+.section-label{color:var(--gold-l);font-family:'Cinzel',serif;font-size:.78rem;letter-spacing:4px;margin-bottom:1rem;text-align:center;text-transform:uppercase;opacity:.7}
+.choices{display:grid;grid-template-columns:repeat(2,1fr);gap:.8rem;max-width:640px;width:100%}
+.choice{background:rgba(15,15,36,.6);border:1px solid rgba(212,175,55,.15);
+  border-radius:14px;padding:1.6rem 1.2rem 1.4rem;cursor:pointer;transition:.3s;text-align:center;position:relative;overflow:hidden;backdrop-filter:blur(4px)}
+.choice:hover{transform:translateY(-4px);border-color:rgba(212,175,55,.5);box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.choice-icon{width:44px;height:44px;border:1px solid rgba(212,175,55,.35);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;margin:0 auto .85rem;
+  font-family:'Cinzel',serif;font-size:1rem;color:var(--gold-l);transition:.3s;letter-spacing:0;line-height:1}
+.choice:hover .choice-icon{border-color:var(--gold);box-shadow:0 0 14px rgba(212,175,55,.2)}
+.choice h3{font-family:'Cinzel',serif;color:var(--gold-l);font-size:1.05rem;margin-bottom:.2rem;font-weight:600}
+.choice .cnt{color:var(--gold);font-size:.72rem;letter-spacing:2px;margin-bottom:.45rem;text-transform:uppercase;opacity:.8}
+.choice p{color:var(--text2);font-size:.82rem;line-height:1.6;font-weight:300;opacity:.9}
+
+/* === BUTTONS === */
+.btn{font-family:'Cinzel',serif;background:linear-gradient(135deg,var(--gold),var(--gold-d));
+  color:#1a1208;border:none;padding:.85rem 2.2rem;border-radius:40px;font-size:1rem;
+  font-weight:600;letter-spacing:1px;cursor:pointer;transition:.3s;box-shadow:0 6px 20px rgba(212,175,55,.3)}
+.btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 10px 28px rgba(212,175,55,.45)}
+.btn-ghost{background:transparent;border:1px solid var(--gold-d);color:var(--gold-l);box-shadow:none}
+.btn-ghost:hover{background:rgba(212,175,55,.1);box-shadow:none;transform:translateY(-2px)}
+
+/* === DRAW SCREEN === */
+.draw-head{text-align:center;margin-bottom:.5rem}
+.draw-head h2{font-family:'Cinzel',serif;color:var(--gold-l);font-size:1.5rem}
+.draw-head .focus{color:var(--text2);font-size:.9rem;margin-top:.4rem;max-width:500px;font-weight:300;line-height:1.7}
+.shuffle-note{color:var(--gold);font-size:.88rem;margin:1rem 0 .3rem;letter-spacing:1px;animation:pulse 2.2s infinite}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.spread{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:1.4rem;
+  margin:1.4rem 0;perspective:1400px}
+
+/* === ANTIQUED TAROT CARD === */
+.card-slot{display:flex;flex-direction:column;align-items:center;gap:.5rem}
+.slot-label{font-family:'Cinzel',serif;color:var(--gold);font-size:.74rem;letter-spacing:1px;text-align:center}
+.card{width:126px;height:216px;position:relative;transform-style:preserve-3d;
+  transition:transform .7s cubic-bezier(.4,.2,.2,1);cursor:pointer}
+.card.flipped{transform:rotateY(180deg);cursor:default}
+.card.dealing{animation:deal .5s ease backwards}
+@keyframes deal{from{opacity:0;transform:translateY(-30px) scale(.85)}}
+.card:not(.flipped):hover{transform:translateY(-8px) rotateX(4deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:10px;overflow:hidden}
+
+/* Card Back — antiqued pattern */
+.back{
+  background:repeating-linear-gradient(45deg,rgba(212,175,55,.06) 0 5px,transparent 5px 10px),
+             repeating-linear-gradient(-45deg,rgba(212,175,55,.06) 0 5px,transparent 5px 10px),
+             linear-gradient(160deg,#1e0e3e,#0e0a24);
+  border:2px solid var(--gold-d);
+  display:flex;align-items:center;justify-content:center}
+.back-inner{width:90%;height:90%;border:1px solid rgba(212,175,55,.3);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;font-size:2.2rem;
+  color:var(--gold);filter:drop-shadow(0 0 6px rgba(212,175,55,.5));animation:spin 20s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Card Front — antiqued parchment style */
+.front{transform:rotateY(180deg);background:var(--parchment);border:2px solid var(--inkbrown);
+  display:flex;flex-direction:column;padding:0}
+.front.reversed .card-art{transform:rotate(180deg)}
+.front::before{content:'';position:absolute;inset:5px;border:1px solid var(--inkbrown);
+  border-radius:5px;opacity:.4;pointer-events:none;z-index:1}
+.card-header{display:flex;justify-content:space-between;align-items:center;
+  padding:3px 6px;border-bottom:1px solid rgba(58,32,8,.3);flex-shrink:0}
+.card-num{font-family:'Cinzel',serif;font-size:.6rem;color:var(--inkbrown);font-weight:600}
+.card-el{font-size:.65rem;color:var(--inkbrown);opacity:.8}
+.card-art{flex:1;display:flex;align-items:center;justify-content:center;
+  font-size:3rem;background:rgba(58,32,8,.03);position:relative;padding:0;overflow:hidden}
+.card-art-sym{filter:drop-shadow(1px 1px 2px rgba(58,32,8,.3))}
+
+/* Element tint overlay */
+.card-art::before{content:'';position:absolute;inset:0;opacity:.08;pointer-events:none}
+.el-fire .card-art::before{background:radial-gradient(#c8341f,transparent)}
+.el-water .card-art::before{background:radial-gradient(#1e54b0,transparent)}
+.el-air .card-art::before{background:radial-gradient(#806030,transparent)}
+.el-earth .card-art::before{background:radial-gradient(#2a6020,transparent)}
+.el-spirit .card-art::before{background:radial-gradient(#5a14a0,transparent)}
+
+.card-footer{padding:3px 5px 4px;border-top:1px solid rgba(58,32,8,.3);flex-shrink:0;
+  max-height:42px;overflow:hidden}
+.card-name{font-family:'Cinzel',serif;font-size:.52rem;color:var(--inkbrown);
+  text-align:center;font-weight:600;line-height:1.2;display:block;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-kws{display:flex;justify-content:center;flex-wrap:nowrap;gap:1px;margin-top:2px;
+  overflow:hidden;max-width:100%}
+.card-kw{font-size:.4rem;color:rgba(58,32,8,.7);font-family:'Cinzel',serif;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:36px}
+.card-kw:not(:last-child)::after{content:' ·'}
+.rev-tag{display:block;text-align:center;font-size:.46rem;color:var(--fire);
+  font-family:'Cinzel',serif;margin-top:1px;letter-spacing:.5px}
+
+/* === READING SCREEN === */
+.reading-head{text-align:center;margin-bottom:1.2rem}
+.reading-head .date{color:var(--dim);font-size:.82rem;letter-spacing:1px;margin-top:.3rem}
+.reading-list{display:flex;flex-direction:column;gap:1.4rem;max-width:780px;width:100%}
+
+.read-item{background:linear-gradient(150deg,rgba(28,28,72,.65),rgba(21,21,58,.4));
+  border:1px solid rgba(212,175,55,.2);border-radius:16px;padding:1.2rem;
+  backdrop-filter:blur(6px)}
+.read-item-top{display:flex;gap:1rem;flex-wrap:wrap}
+.mini-card{width:100px;height:172px;flex-shrink:0;border-radius:8px;overflow:hidden;
+  border:2px solid var(--inkbrown);background:var(--parchment);display:flex;flex-direction:column}
+.mini-card .mc-head{display:flex;justify-content:space-between;padding:2px 5px;
+  border-bottom:1px solid rgba(58,32,8,.3);font-size:.52rem;font-family:'Cinzel',serif;color:var(--inkbrown)}
+.mini-card .mc-art{flex:1;display:flex;align-items:center;justify-content:center;font-size:2.4rem}
+.mini-card .mc-art.rev{transform:rotate(180deg)}
+.mini-card .mc-foot{padding:2px 4px;border-top:1px solid rgba(58,32,8,.3)}
+.mini-card .mc-name{display:block;font-family:'Cinzel',serif;font-size:.46rem;
+  color:var(--inkbrown);text-align:center;font-weight:600;line-height:1.2}
+.read-info{flex:1;min-width:200px}
+.pos-label{font-family:'Cinzel',serif;color:var(--gold);font-size:.78rem;letter-spacing:1px;margin-bottom:.25rem}
+.card-title{font-size:1.2rem;font-weight:700;color:var(--gold-l);line-height:1.2}
+.card-title-en{font-family:'Cinzel',serif;font-size:.75rem;color:var(--dim);margin-bottom:.4rem}
+.orient{display:inline-block;font-size:.7rem;padding:2px 10px;border-radius:20px;
+  font-weight:600;margin-bottom:.7rem;letter-spacing:.5px}
+.orient.up{background:rgba(82,168,78,.2);color:#7ed87a;border:1px solid rgba(82,168,78,.4)}
+.orient.rev{background:rgba(200,52,31,.2);color:#f08a6a;border:1px solid rgba(200,52,31,.4)}
+
+/* === TABS === */
+.tab-bar{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.8rem}
+.tab-btn{font-size:.72rem;padding:4px 11px;border-radius:20px;border:1px solid rgba(212,175,55,.3);
+  color:var(--text2);background:transparent;cursor:pointer;transition:.25s;font-family:'Sarabun',sans-serif}
+.tab-btn:hover{border-color:var(--gold);color:var(--gold-l)}
+.tab-btn.active{background:var(--gold);color:#1a1208;border-color:var(--gold);font-weight:600}
+.tab-pane{display:none;color:var(--text);line-height:1.85;font-size:.93rem;font-weight:300;margin-bottom:.8rem}
+.tab-pane.active{display:block;animation:fadeIn .3s ease}
+.tab-pane .hint{color:var(--dim);font-size:.8rem;font-style:italic;display:block;margin-bottom:.3rem}
+.synthesis{font-size:.95rem;line-height:1.8;color:var(--text);margin:.4rem 0 .85rem;padding:.6rem .9rem;
+  background:rgba(212,175,55,.06);border-left:3px solid var(--gold-d);border-radius:0 8px 8px 0}
+.timing-hint{display:block;font-size:.74rem;color:var(--dim);margin:.5rem 0 .3rem;letter-spacing:.3px}
+/* Card real images */
+.card-img{width:100%;height:100%;object-fit:contain;display:block;border-radius:2px}
+.mini-card-img{width:110px;height:190px;flex-shrink:0;border-radius:8px;overflow:hidden;
+  border:2px solid var(--inkbrown);position:relative;cursor:default;
+  background:var(--parchment);display:flex;align-items:center;justify-content:center}
+.mini-card-img img{width:100%;height:100%;object-fit:contain;display:block}
+.mini-card-img.rev img{transform:rotate(180deg)}
+.mc-name-overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(58,32,8,.75);
+  font-family:'Cinzel',serif;font-size:.44rem;color:var(--parchment);text-align:center;
+  padding:3px 2px;line-height:1.2}
+@media(max-width:580px){.mini-card-img{width:90px;height:155px}}
+.el-block{border:1px solid;border-radius:10px;padding:.6rem .85rem;margin:.5rem 0 .75rem}
+.el-block-title{display:block;font-size:.8rem;font-weight:700;margin-bottom:.3rem;letter-spacing:.3px}
+.el-block-body{display:block;font-size:.84rem;color:var(--text2);line-height:1.7}
+
+/* === SHADOW WORK === */
+.shadow-box{margin:.8rem 0;padding:.8rem 1rem;background:rgba(90,20,160,.12);
+  border:1px solid rgba(156,60,224,.25);border-radius:10px;font-size:.85rem;
+  color:var(--text2);line-height:1.75}
+.shadow-box strong{color:var(--spirit-l);display:block;margin-bottom:.3rem;font-family:'Cinzel',serif;font-size:.78rem}
+.action-box{margin:.8rem 0;padding:.7rem 1rem;background:rgba(212,175,55,.07);
+  border:1px solid rgba(212,175,55,.2);border-radius:10px;font-size:.85rem;
+  color:var(--text2);line-height:1.7}
+.action-box strong{color:var(--gold-l);display:block;margin-bottom:.25rem;font-family:'Cinzel',serif;font-size:.78rem}
+
+/* Tarot methodology notes */
+.rank-note{font-size:.8rem;color:var(--dim);padding:.35rem .6rem;margin:.3rem 0;
+  border-left:2px solid rgba(212,175,55,.35);background:rgba(212,175,55,.05);border-radius:0 6px 6px 0}
+.court-note{font-size:.82rem;color:#b8a0e0;padding:.35rem .6rem;margin:.3rem 0;
+  border-left:2px solid rgba(160,100,220,.4);background:rgba(140,80,200,.06);border-radius:0 6px 6px 0}
+.rev-layer{font-size:.8rem;color:#d08060;padding:.35rem .6rem;margin:.3rem 0;
+  border-left:2px solid rgba(200,100,60,.4);background:rgba(200,100,60,.06);border-radius:0 6px 6px 0;font-style:italic}
+.methodology-section{margin:.9rem 0;padding:.8rem 1rem;background:rgba(255,255,255,.03);
+  border:1px solid rgba(212,175,55,.14);border-radius:10px;font-size:.9rem;line-height:1.8}
+.methodology-section b{font-family:'Cinzel',serif;font-size:.82rem}
+.methodology-section p{margin:.4rem 0 0;color:var(--text2);font-weight:300}
+.methodology-note{font-size:.82rem;color:#a0c8e0;padding:.4rem .7rem;margin:.5rem 0;
+  border-left:2px solid rgba(100,160,220,.4);background:rgba(80,140,200,.07);border-radius:0 6px 6px 0}
+.dignity-pair{margin:.4rem 0;font-size:.83rem;color:var(--text2);padding:.3rem .6rem}
+
+/* === QUESTION MODAL === */
+.q-modal-bg{position:fixed;inset:0;z-index:999;background:rgba(5,5,15,.88);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;padding:1rem;animation:fadeIn .35s ease}
+.q-modal{background:linear-gradient(160deg,#1c1c48,#0d0d24);border:1px solid rgba(156,60,224,.4);
+  border-radius:24px;padding:2rem 1.8rem 1.8rem;max-width:420px;width:100%;text-align:center;
+  box-shadow:0 24px 64px rgba(90,20,160,.6)}
+.q-flame-ring{font-size:3rem;margin-bottom:.6rem;animation:pulse 2.5s infinite}
+.q-modal-title{font-family:'Cinzel Decorative',serif;color:var(--gold-l);font-size:1.6rem;margin-bottom:.5rem}
+.q-modal-sub{color:var(--text2);font-size:.9rem;line-height:1.9;margin-bottom:.6rem;font-weight:300}
+.q-modal-dim{color:var(--dim);font-size:.82rem}
+.q-divider{color:rgba(156,60,224,.5);font-size:.8rem;letter-spacing:.6rem;margin:.9rem 0}
+.q-card-options{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-top:.2rem}
+.q-opt{background:rgba(255,255,255,.04);border:1.5px solid rgba(212,175,55,.2);border-radius:14px;
+  padding:.9rem .7rem;cursor:pointer;transition:.25s;position:relative;text-align:center}
+.q-opt:hover{border-color:rgba(212,175,55,.5);background:rgba(212,175,55,.06)}
+.q-opt-selected{border-color:rgba(156,60,224,.7) !important;background:rgba(156,60,224,.1) !important;
+  box-shadow:0 0 18px rgba(156,60,224,.25)}
+.q-opt-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  background:#7c28c0;color:#fff;font-size:.62rem;font-family:'Cinzel',serif;
+  padding:2px 10px;border-radius:20px;letter-spacing:.5px;white-space:nowrap}
+.q-opt-num{display:block;font-family:'Cinzel',serif;color:var(--gold-l);font-size:1.3rem;font-weight:700;margin-top:.2rem}
+.q-opt-name{display:block;color:var(--text2);font-size:.75rem;margin:.15rem 0 .4rem;letter-spacing:.5px}
+.q-opt-desc{display:block;color:var(--dim);font-size:.72rem;line-height:1.5}
+.q-modal-btns{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap}
+.choice-question{border-color:rgba(156,60,224,.35) !important}
+.choice-question:hover{border-color:#9c3ce0 !important;box-shadow:0 12px 36px rgba(156,60,224,.3) !important}
+.choice-question::before{background:radial-gradient(circle at 50% 0%,rgba(156,60,224,.15),transparent 70%) !important}
+
+/* === QUESTION DISPLAY (reading screen) === */
+.question-display{margin:.8rem auto 0;max-width:600px;padding:.8rem 1.2rem;
+  background:rgba(156,60,224,.08);border:1px solid rgba(156,60,224,.3);border-radius:12px;
+  font-size:.92rem;color:var(--text2);line-height:1.7;text-align:center}
+.question-display::before{content:'◎ คำถาม: ';color:#c080f0;font-weight:600}
+
+/* Keywords & Attrs */
+.kws{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.7rem}
+.kw{font-size:.73rem;background:rgba(212,175,55,.1);color:var(--gold-l);
+  border:1px solid rgba(212,175,55,.22);border-radius:12px;padding:2px 9px}
+.attrs{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:.3rem .8rem;font-size:.76rem;color:var(--dim);
+  border-top:1px solid rgba(212,175,55,.12);padding-top:.6rem;margin-top:.3rem}
+.attrs b{color:var(--text2);font-weight:600}
+
+/* === SUMMARY === */
+.summary{background:linear-gradient(150deg,rgba(90,20,160,.25),rgba(28,28,72,.5));
+  border:1px solid rgba(212,175,55,.28);border-radius:16px;padding:1.4rem;
+  max-width:780px;width:100%;margin-top:1.4rem}
+.summary h3{font-family:'Cinzel',serif;color:var(--gold-l);font-size:1.2rem;margin-bottom:.8rem}
+.summary p{color:var(--text);line-height:1.85;font-weight:300;font-size:.94rem;margin-bottom:.6rem}
+.energy-tags{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.8rem}
+.etag{font-size:.8rem;padding:4px 13px;border-radius:20px;font-weight:600;border:1px solid}
+.actions{display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center;margin-top:1.8rem}
+.foot{text-align:center;color:var(--dim);font-size:.76rem;margin-top:2rem;line-height:1.7;max-width:580px;font-weight:300}
+
+@media(max-width:580px){
+  .card{width:102px;height:174px}.front .card-art{font-size:2.4rem}
+  .mini-card{width:80px;height:138px}.mini-card .mc-art{font-size:1.8rem}
+  .read-item-top{gap:.7rem}
+}
+@media print{#stars,.btn,.btn-ghost,.tab-bar{display:none!important}.screen.active{background:white;color:black}}
+
+/* === SHARE MODAL === */
+.share-modal-bg{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:1rem}
+.share-modal{background:var(--bg2);border:1px solid rgba(212,175,55,.25);border-radius:16px;max-width:480px;width:100%;padding:1.4rem 1.2rem 1.2rem;position:relative;max-height:90vh;overflow-y:auto}
+.share-modal-close{position:absolute;top:.7rem;right:.9rem;background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer;line-height:1}
+.share-modal-close:hover{color:var(--gold-l)}
+.share-modal-title{font-family:'Cinzel',serif;color:var(--gold-l);font-size:.88rem;letter-spacing:3px;text-align:center;margin-bottom:1rem;text-transform:uppercase}
+.share-preview-wrap{background:#000;border-radius:8px;overflow:hidden;margin-bottom:1rem;text-align:center}
+.share-preview-wrap canvas{max-width:100%;display:block;margin:0 auto}
+.share-modal-btns{display:flex;gap:.6rem;justify-content:center}
+
+/* === SPECIAL TOOLS SECTION (Home) === */
+.tools-section{margin-top:1.8rem;width:100%;max-width:760px}
+.tools-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;width:100%}
+.choice-tool{background:rgba(15,10,30,.6);border:1px solid rgba(156,60,224,.18);
+  border-radius:14px;padding:1.5rem 1.2rem 1.3rem;cursor:pointer;transition:.3s;text-align:center;backdrop-filter:blur(4px)}
+.choice-tool:hover{transform:translateY(-4px);border-color:rgba(156,60,224,.5);box-shadow:0 8px 28px rgba(90,20,160,.3)}
+.choice-tool .choice-icon{border-color:rgba(156,60,224,.35);color:#c080f0}
+.choice-tool:hover .choice-icon{border-color:#c080f0;box-shadow:0 0 14px rgba(156,60,224,.25)}
+.choice-tool h3{font-family:'Cinzel',serif;color:#c080f0;font-size:1rem;margin-bottom:.2rem;font-weight:600}
+.choice-tool p{color:var(--text2);font-size:.8rem;line-height:1.6;font-weight:300;opacity:.85}
+.tools-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem;width:100%}
+
+/* === BIRTH CARD SCREEN === */
+#screen-birthcard{padding:2rem 1rem 5rem}
+.bc-form{background:linear-gradient(150deg,rgba(28,28,72,.7),rgba(21,21,58,.5));
+  border:1px solid rgba(156,60,224,.3);border-radius:20px;padding:1.8rem 1.6rem;
+  max-width:480px;width:100%;margin:1.2rem 0 1.6rem}
+.bc-form-title{font-family:'Cinzel',serif;color:#c080f0;font-size:1rem;
+  letter-spacing:2px;margin-bottom:1.2rem;text-align:center}
+.bc-date-row{display:flex;gap:.7rem;align-items:flex-end;justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
+.bc-field{display:flex;flex-direction:column;gap:.3rem}
+.bc-field label{font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold-l);
+  letter-spacing:1px;text-align:center}
+.bc-field input[type=number]{width:72px;padding:.6rem .4rem;border-radius:10px;
+  border:1px solid rgba(212,175,55,.35);background:rgba(5,5,15,.6);
+  color:var(--text);font-family:'Sarabun',sans-serif;font-size:1.1rem;
+  text-align:center;outline:none;transition:.25s}
+.bc-field input[type=number]:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(212,175,55,.2)}
+.bc-field-year input{width:96px}
+.bc-check-row{display:flex;align-items:center;gap:.5rem;justify-content:center;margin-bottom:1.2rem}
+.bc-check-row label{color:var(--text2);font-size:.88rem;cursor:pointer}
+.bc-check-row input[type=checkbox]{accent-color:var(--gold);width:16px;height:16px;cursor:pointer}
+.bc-btn{display:flex;justify-content:center}
+
+/* Birth card result */
+.bc-result{max-width:680px;width:100%;animation:fadeIn .5s ease}
+.bc-num-badge{font-family:'Cinzel Decorative',serif;font-size:3rem;color:var(--gold-l);
+  text-align:center;margin:.5rem 0;filter:drop-shadow(0 2px 8px rgba(212,175,55,.4))}
+.bc-cards-row{display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;margin:1.2rem 0}
+.bc-card-wrap{display:flex;flex-direction:column;align-items:center;gap:.7rem}
+.bc-card-label{font-family:'Cinzel',serif;font-size:.75rem;color:var(--gold-l);
+  letter-spacing:1px;text-align:center}
+.bc-card-img{width:140px;height:240px;border-radius:12px;overflow:hidden;
+  border:2px solid var(--gold-d);background:var(--parchment);
+  display:flex;align-items:center;justify-content:center}
+.bc-card-img img{width:100%;height:100%;object-fit:contain;display:block}
+.bc-card-detail{background:linear-gradient(150deg,rgba(28,28,72,.6),rgba(21,21,58,.4));
+  border:1px solid rgba(212,175,55,.2);border-radius:14px;padding:1.2rem 1.4rem;
+  max-width:560px;width:100%}
+.bc-card-detail h3{font-family:'Cinzel',serif;color:var(--gold-l);font-size:1.2rem;margin-bottom:.2rem}
+.bc-card-detail .bc-en{font-family:'Cinzel',serif;color:var(--dim);font-size:.8rem;margin-bottom:.6rem}
+.bc-meaning{font-size:.97rem;line-height:1.85;color:var(--text);padding:.7rem 1rem;
+  background:rgba(212,175,55,.06);border-left:3px solid var(--gold-d);
+  border-radius:0 8px 8px 0;margin:.6rem 0}
+.bc-kws{display:flex;flex-wrap:wrap;gap:.35rem;margin:.5rem 0}
+.bc-dual-note{text-align:center;font-size:.85rem;color:#c080f0;margin:.3rem 0 .8rem;
+  padding:.5rem 1rem;background:rgba(156,60,224,.08);border:1px solid rgba(156,60,224,.2);
+  border-radius:10px;max-width:500px;width:100%}
+.bc-el-tag{display:inline-block;font-size:.78rem;padding:3px 12px;border-radius:20px;
+  background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.25);color:var(--gold-l);margin:.3rem 0}
+
+/* === LIBRARY SCREEN === */
+#screen-library{padding:2rem 1rem 5rem;align-items:stretch;max-width:900px;margin:0 auto;width:100%}
+.lib-head{text-align:center;margin-bottom:1rem}
+.lib-filter-bar{display:flex;flex-wrap:wrap;gap:.45rem;justify-content:center;margin-bottom:.8rem}
+.lib-filter-btn{font-family:'Cinzel',serif;font-size:.75rem;padding:5px 14px;border-radius:20px;
+  border:1px solid rgba(212,175,55,.3);color:var(--text2);background:transparent;
+  cursor:pointer;transition:.25s;letter-spacing:.5px}
+.lib-filter-btn:hover{border-color:var(--gold);color:var(--gold-l)}
+.lib-filter-btn.active{background:rgba(212,175,55,.15);border-color:var(--gold);color:var(--gold-l);font-weight:600}
+.lib-search-wrap{display:flex;justify-content:center;margin-bottom:.6rem}
+.lib-search{width:100%;max-width:380px;padding:.6rem 1rem;border-radius:30px;
+  border:1px solid rgba(212,175,55,.35);background:rgba(5,5,15,.6);
+  color:var(--text);font-family:'Sarabun',sans-serif;font-size:.95rem;
+  outline:none;transition:.25s}
+.lib-search:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(212,175,55,.15)}
+.lib-search::placeholder{color:var(--dim)}
+.lib-count{text-align:center;font-family:'Cinzel',serif;color:var(--dim);
+  font-size:.78rem;letter-spacing:1px;margin-bottom:1rem}
+.lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:.85rem;width:100%}
+.lib-card-thumb{background:linear-gradient(160deg,rgba(28,28,72,.7),rgba(21,21,58,.5));
+  border:1px solid rgba(212,175,55,.15);border-radius:12px;overflow:hidden;
+  cursor:pointer;transition:.3s;display:flex;flex-direction:column;align-items:center}
+.lib-card-thumb:hover{border-color:var(--gold);transform:translateY(-4px);
+  box-shadow:0 8px 24px rgba(212,175,55,.2)}
+.lib-card-thumb img{width:100%;aspect-ratio:2/3.5;object-fit:contain;
+  background:var(--parchment);display:block}
+.lib-card-thumb .lib-thumb-name{font-family:'Cinzel',serif;font-size:.55rem;
+  color:var(--text2);text-align:center;padding:4px 4px 5px;line-height:1.3;
+  border-top:1px solid rgba(212,175,55,.15)}
+
+/* Library modal */
+.lib-modal-bg{position:fixed;inset:0;z-index:999;background:rgba(5,5,15,.9);
+  backdrop-filter:blur(8px);display:flex;align-items:flex-start;justify-content:center;
+  padding:1rem;overflow-y:auto;animation:fadeIn .3s ease}
+.lib-modal{background:linear-gradient(160deg,#1c1c48,#0d0d24);
+  border:1px solid rgba(212,175,55,.3);border-radius:22px;padding:1.8rem;
+  max-width:600px;width:100%;position:relative;margin:auto}
+.lib-modal-close{position:absolute;top:1rem;right:1.2rem;background:transparent;
+  border:1px solid rgba(212,175,55,.3);color:var(--gold-l);border-radius:50%;
+  width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;
+  align-items:center;justify-content:center;transition:.2s}
+.lib-modal-close:hover{background:rgba(212,175,55,.15);border-color:var(--gold)}
+.lib-modal-top{display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.lib-modal-img{width:120px;height:205px;border-radius:10px;overflow:hidden;
+  border:2px solid var(--gold-d);background:var(--parchment);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center}
+.lib-modal-img img{width:100%;height:100%;object-fit:contain;display:block}
+.lib-modal-info{flex:1;min-width:180px}
+.lib-modal-info h2{font-family:'Cinzel',serif;color:var(--gold-l);font-size:1.3rem;
+  margin-bottom:.15rem;line-height:1.3}
+.lib-modal-info .lm-en{font-family:'Cinzel',serif;color:var(--dim);font-size:.8rem;margin-bottom:.5rem}
+.lib-modal-info .lm-el{font-size:.82rem;color:var(--text2);margin-bottom:.5rem}
+.lib-modal-info .lm-kws{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.6rem}
+.lib-modal-info .lm-kws span{font-size:.72rem;background:rgba(212,175,55,.1);
+  color:var(--gold-l);border:1px solid rgba(212,175,55,.22);border-radius:12px;padding:2px 8px}
+.lm-meaning{font-size:.9rem;line-height:1.8;color:var(--text2);padding:.6rem .9rem;
+  background:rgba(212,175,55,.06);border-left:3px solid var(--gold-d);
+  border-radius:0 8px 8px 0;margin:.4rem 0 .8rem}
+.lm-rev-meaning{font-size:.88rem;line-height:1.8;color:var(--text2);padding:.6rem .9rem;
+  background:rgba(200,52,31,.05);border-left:3px solid rgba(200,52,31,.4);
+  border-radius:0 8px 8px 0;margin:.4rem 0 .8rem}
+.lm-rev-label{font-family:'Cinzel',serif;font-size:.72rem;color:#f08a6a;
+  letter-spacing:.5px;margin-bottom:.2rem;display:block}
+.lm-up-label{font-family:'Cinzel',serif;font-size:.72rem;color:var(--gold-l);
+  letter-spacing:.5px;margin-bottom:.2rem;display:block}
+.lib-modal-tabs{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.8rem}
+.lib-modal-tab-btn{font-size:.72rem;padding:4px 11px;border-radius:20px;
+  border:1px solid rgba(212,175,55,.3);color:var(--text2);background:transparent;
+  cursor:pointer;transition:.25s;font-family:'Sarabun',sans-serif}
+.lib-modal-tab-btn:hover{border-color:var(--gold);color:var(--gold-l)}
+.lib-modal-tab-btn.active{background:var(--gold);color:#1a1208;border-color:var(--gold);font-weight:600}
+.lib-modal-tab-pane{display:none;color:var(--text);line-height:1.85;font-size:.9rem;font-weight:300}
+.lib-modal-tab-pane.active{display:block;animation:fadeIn .3s ease}
+@media(max-width:580px){
+  .lib-grid{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:.6rem}
+  .lib-modal-top{flex-direction:column;align-items:center}
+  .lib-modal-img{width:110px;height:188px}
+}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="app">
+
+<!-- ===== HOME ===== -->
+<section id="screen-home" class="screen active">
+  <h1 class="title">ไพ่ทาโรต์</h1>
+  <p class="subtitle">Meaning Tarot · Antiqued RWS · ทำนายดวงชะตา</p>
+  <div class="divider"><span>✦</span></div>
+  <p class="intro">ไพ่ทาโรต์ 78 ใบ สะท้อนทุกมิติของชีวิต — เปิดไพ่รับคำทำนายที่ตรงกับสถานการณ์จริงของคุณ</p>
+  <p class="section-label">เลือกการทำนาย</p>
+  <div class="choices">
+    <div class="choice" onclick="startReading('daily')">
+      <div class="choice-icon">Ⅰ</div>
+      <h3>รายวัน</h3>
+      <div class="cnt">1 ใบ</div>
+      <p>พลังงานและคำชี้นำ 5 มิติสำหรับวันนี้</p>
+    </div>
+    <div class="choice" onclick="startReading('weekly')">
+      <div class="choice-icon">Ⅲ</div>
+      <h3>รายสัปดาห์</h3>
+      <div class="cnt">3 ใบ</div>
+      <p>อดีต–ปัจจุบัน–อนาคตของสัปดาห์นี้</p>
+    </div>
+    <div class="choice" onclick="startReading('monthly')">
+      <div class="choice-icon">Ⅴ</div>
+      <h3>รายเดือน</h3>
+      <div class="cnt">5 ใบ</div>
+      <p>ภาพรวม · ท้าทาย · โอกาส · คำแนะนำ · ผลลัพธ์</p>
+    </div>
+    <div class="choice choice-question" onclick="openQuestionModal()">
+      <div class="choice-icon">◎</div>
+      <h3>ถามไพ่</h3>
+      <div class="cnt">1 หรือ 3 ใบ</div>
+      <p>ตั้งจิต ถามในใจ — ไพ่ตอบตรงๆ</p>
+    </div>
+  </div>
+  <p class="foot" style="margin-top:2rem;font-size:.78rem;opacity:.4;letter-spacing:1px">ไพ่ทาโรต์เป็นกระจกสะท้อนจิตใจ ไม่ใช่คำพยากรณ์ตายตัว</p>
+
+  <div class="divider" style="margin-top:2rem"><span>✦</span></div>
+  <p class="section-label">เครื่องมือพิเศษ</p>
+  <div class="tools-choices">
+    <div class="choice-tool" onclick="show('screen-birthcard')">
+      <div class="choice-icon">✦</div>
+      <h3>ไพ่ประจำตัว</h3>
+      <p>คำนวณไพ่ประจำตัวจากวันเกิด</p>
+    </div>
+    <div class="choice-tool" onclick="openLibrary()">
+      <div class="choice-icon">≡</div>
+      <h3>คลังไพ่ 78 ใบ</h3>
+      <p>สำรวจและค้นหาไพ่ทุกใบ</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== QUESTION MODAL ===== -->
+<div id="question-modal" class="q-modal-bg" style="display:none" onclick="if(event.target===this)closeQuestionModal()">
+  <div class="q-modal">
+    <div class="q-flame-ring">◎</div>
+    <h2 class="q-modal-title">ถามไพ่</h2>
+    <p class="q-modal-sub">หลับตา ตั้งจิตให้นิ่ง<br>ถามคำถามในใจให้ชัดเจนที่สุด<br><span class="q-modal-dim">เมื่อพร้อมแล้ว เลือกรูปแบบการอ่าน</span></p>
+    <div class="q-divider">✦ ✦ ✦</div>
+    <div class="q-card-options">
+      <div class="q-opt" id="q-opt-1" onclick="selectQCount(1)">
+        <span class="q-opt-num">1 ใบ</span>
+        <span class="q-opt-name">คำตอบตรง</span>
+        <span class="q-opt-desc">ไพ่ตอบชัดๆ ดีสำหรับคำถามง่าย หรือใช่/ไม่ใช่</span>
+      </div>
+      <div class="q-opt q-opt-selected" id="q-opt-3" onclick="selectQCount(3)">
+        <span class="q-opt-badge">แนะนำ</span>
+        <span class="q-opt-num">3 ใบ</span>
+        <span class="q-opt-name">แก่น · รู้ · ตอบ</span>
+        <span class="q-opt-desc">ครอบคลุมกว่า เห็นบริบท สิ่งที่ต้องรู้ และคำตอบ</span>
+      </div>
+    </div>
+    <div class="q-modal-btns" style="margin-top:1.4rem">
+      <button class="btn" onclick="submitQuestion()">เปิดไพ่</button>
+      <button class="btn btn-ghost" onclick="closeQuestionModal()">← กลับ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DRAW ===== -->
+<section id="screen-draw" class="screen">
+  <div class="draw-head">
+    <h2 id="draw-title">เปิดไพ่</h2>
+    <p class="focus" id="draw-focus"></p>
+  </div>
+  <p class="shuffle-note" id="shuffle-note">◈  ตั้งจิตอธิษฐาน แล้วแตะไพ่เพื่อพลิกทีละใบ</p>
+  <div class="spread" id="spread"></div>
+  <button class="btn" id="btn-reveal" style="display:none" onclick="showReading()">ดูคำทำนาย</button>
+  <button class="btn btn-ghost" onclick="goHome()" style="margin-top:.7rem">← กลับ</button>
+</section>
+
+<!-- ===== READING ===== -->
+<section id="screen-reading" class="screen">
+  <div class="reading-head">
+    <h2 class="title" id="reading-title" style="font-size:1.9rem"></h2>
+    <p class="date" id="reading-date"></p>
+    <div id="question-display" class="question-display" style="display:none"></div>
+  </div>
+  <div class="reading-list" id="reading-list"></div>
+  <div class="summary" id="summary"></div>
+  <div class="actions">
+    <button class="btn" onclick="goHome()">ทำนายใหม่</button>
+    <button class="btn btn-ghost" id="btn-share" onclick="shareReading()">↗ แชร์ผลทำนาย</button>
+    <button class="btn btn-ghost" onclick="window.print()">พิมพ์</button>
+  </div>
+
+  <!-- Share preview modal -->
+  <div id="share-modal" class="share-modal-bg" style="display:none" onclick="if(event.target===this)closeShareModal()">
+    <div class="share-modal">
+      <button class="share-modal-close" onclick="closeShareModal()">✕</button>
+      <p class="share-modal-title">ภาพผลทำนาย</p>
+      <div class="share-preview-wrap">
+        <canvas id="share-canvas" style="max-width:100%;border-radius:8px"></canvas>
+      </div>
+      <div class="share-modal-btns">
+        <button class="btn" onclick="doShareAction()">↗ แชร์ / บันทึก</button>
+        <button class="btn btn-ghost" onclick="closeShareModal()">ปิด</button>
+      </div>
+    </div>
+  </div>
+  <p class="foot">คำทำนายนี้สร้างจากการสุ่มไพ่และการตีความตามศาสตร์ดั้งเดิม · ผลลัพธ์ใหม่ทุกครั้งที่เปิดไพ่</p>
+</section>
+
+<!-- ===== BIRTH CARD ===== -->
+<section id="screen-birthcard" class="screen">
+  <h2 class="title" style="font-size:1.9rem">ไพ่ประจำตัว</h2>
+  <p class="subtitle">Birth Card · เลขศาสตร์วันเกิด</p>
+  <div class="bc-form">
+    <p class="bc-form-title">กรอกวันเกิดของคุณ</p>
+    <div class="bc-date-row">
+      <div class="bc-field">
+        <label>วัน (DD)</label>
+        <input type="number" id="bc-day" min="1" max="31" placeholder="15">
+      </div>
+      <div class="bc-field">
+        <label>เดือน (MM)</label>
+        <input type="number" id="bc-month" min="1" max="12" placeholder="06">
+      </div>
+      <div class="bc-field bc-field-year">
+        <label>ปี (YYYY)</label>
+        <input type="number" id="bc-year" min="1900" max="2100" placeholder="1990">
+      </div>
+    </div>
+    <div class="bc-check-row">
+      <input type="checkbox" id="bc-bce" onchange="updateBCYearLabel()">
+      <label for="bc-bce">ปีเป็น พ.ศ. (ลบ 543 อัตโนมัติ)</label>
+    </div>
+    <div class="bc-btn">
+      <button class="btn" onclick="calcBirthCard()">✨ คำนวณไพ่ประจำตัว</button>
+    </div>
+  </div>
+  <div id="bc-result" class="bc-result" style="display:none"></div>
+  <button class="btn btn-ghost" onclick="goHome()" style="margin-top:1rem">← กลับหน้าหลัก</button>
+</section>
+
+<!-- ===== LIBRARY ===== -->
+<section id="screen-library" class="screen">
+  <div class="lib-head">
+    <h2 class="title" style="font-size:1.9rem">คลังไพ่ 78 ใบ</h2>
+    <p class="subtitle">สำรวจไพ่ทุกใบในสำรับ</p>
+  </div>
+  <div class="lib-filter-bar" id="lib-filters"></div>
+  <div class="lib-search-wrap">
+    <input class="lib-search" type="text" id="lib-search" placeholder="🔍 ค้นหาชื่อไพ่..." oninput="renderLibGrid()">
+  </div>
+  <div class="lib-count" id="lib-count">0 ใบ</div>
+  <div class="lib-grid" id="lib-grid"></div>
+  <div style="display:flex;justify-content:center;margin-top:1.6rem">
+    <button class="btn btn-ghost" onclick="goHome()">← กลับหน้าหลัก</button>
+  </div>
+</section>
+
+<!-- Library detail modal -->
+<div id="lib-modal" class="lib-modal-bg" style="display:none" onclick="if(event.target===this)closeLibModal()">
+  <div class="lib-modal" id="lib-modal-inner"></div>
+</div>
+
+</div>
+<script src="deck.js?v=15"></script>
+<script src="app.js?v=15"></script>
+</body>
+</html>
