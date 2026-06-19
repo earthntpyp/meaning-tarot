@@ -43,8 +43,11 @@ const EL_PALETTE = {
   spirit:'deep indigo #1A1040, soft violet #9B8EC4, pearl #F0EDFF, silver accent',
 };
 
-/* --- Minimal style system prompt --- */
-const MINIMAL_STYLE = `Modern minimalist art poster, iPhone wallpaper 9:16 portrait. Clean geometric composition, lots of negative space, flat design with subtle depth. Premium design aesthetic — think Dieter Rams meets Japanese wabi-sabi. Muted sophisticated color palette, no more than 3 colors. Thin elegant line art, simple abstract shapes. No clutter, no gradients, no ornate decorations. Ultra clean, contemporary, gallery-quality.`;
+/* --- Minimal style base --- */
+const MINIMAL_STYLE = `Modern minimalist art poster for iPhone wallpaper, 9:16 portrait orientation. Clean geometric composition, generous negative space, flat design with subtle depth. Premium design aesthetic — think Dieter Rams meets Japanese wabi-sabi. Muted sophisticated color palette, maximum 3 colors. Thin crisp elegant line art, simple abstract shapes. Ultra sharp edges, crystal clear, no blur, no noise. No clutter, no gradients, no ornate decorations. Gallery-quality, vector-like precision, professional print quality.`;
+
+/* --- Quality suffix appended to every prompt --- */
+const QUALITY_SUFFIX = ', ultra sharp, crystal clear, 4K resolution, crisp edges, high contrast, professional quality, no blur, no noise, no artifacts';
 
 /* --- Build card lines for prompt --- */
 function describeCards(cards) {
@@ -65,7 +68,7 @@ function builtInPrompt(cards, element) {
     return `${sym} representing ${kw}`;
   }).join('; ');
 
-  return `${MINIMAL_STYLE} Color palette: ${palette}. Centered composition featuring minimalist tarot symbols: ${symbols}. Single focal point, thin line icons, clean typography space, ample breathing room. Positive affirming energy. Ultra clean modern design, no noise, no texture.`;
+  return `${MINIMAL_STYLE} Color palette: ${palette}. Centered composition featuring minimalist tarot symbols: ${symbols}. Single focal point, thin line icons, clean typography space, ample breathing room. Positive affirming energy. Ultra clean modern design, no noise, no texture${QUALITY_SUFFIX}.`;
 }
 
 /* --- Claude prompt --- */
@@ -93,14 +96,15 @@ ${cardDesc}
 
 Design direction:
 - MINIMAL and MODERN — clean, contemporary, gallery-quality art poster style
-- Incorporate the tarot card symbols as SIMPLE GEOMETRIC SHAPES or THIN LINE ART
+- Incorporate the tarot card symbols as SIMPLE GEOMETRIC SHAPES or THIN CRISP LINE ART
 - Color palette: ${palette} (maximum 3 colors, muted and sophisticated)
-- Large negative space, single clear focal point, no clutter
+- Large negative space, single clear focal point, absolutely no clutter
 - Aesthetic: Dieter Rams / Bauhaus / Japanese minimalism / premium Apple wallpaper
-- Positive, uplifting, lucky energy expressed through clean design — not mystical ornate
-- No gradients, no ornate details, no heavy textures
+- Positive, uplifting energy expressed through clean design — not mystical ornate
+- No gradients, no ornate details, no heavy textures, no noise
+- End prompt with: ultra sharp, crystal clear, 4K, crisp edges, vector precision
 
-Write ONLY the image generation prompt in English. Max 150 words.`
+Write ONLY the image generation prompt in English. Max 160 words.`
       }]
     })
   });
@@ -125,7 +129,7 @@ async function promptViaGemini(cards, element) {
             text: `Create a minimal modern art image prompt for iPhone wallpaper (9:16).
 Tarot cards:
 ${cardDesc}
-Style: minimalist, clean, modern, Bauhaus-inspired, premium design. Color palette: ${palette}, max 3 colors. Simple geometric tarot symbols, large negative space, no clutter. Positive energy. English only, max 150 words, prompt only.`
+Style: minimalist, modern, Bauhaus-inspired, premium design. Palette: ${palette}, max 3 colors. Simple geometric tarot symbols, large negative space, no clutter, ultra sharp crisp edges, 4K quality. English only, max 160 words, prompt only.`
           }]
         }]
       })
@@ -154,9 +158,9 @@ app.post('/api/wallpaper', async (req, res) => {
       promptSource = 'Built-in';
     }
 
-    // Pollinations.AI — free, no key needed, FLUX model
+    // Pollinations.AI — 1170×2532 matches iPhone 14/15 native resolution
     const seed = Math.floor(Math.random() * 999999);
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=576&height=1024&model=flux&nologo=true&seed=${seed}`;
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1170&height=2532&model=flux&nologo=true&enhance=true&seed=${seed}`;
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 90000);
