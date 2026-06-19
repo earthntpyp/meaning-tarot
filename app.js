@@ -1153,9 +1153,9 @@ function switchLibTab(btn, tabName){
    =================================================================== */
 
 const _wpSteps=[
-  'กำลังอ่านพลังงานไพ่…',
-  'Claude กำลังสร้าง prompt ลึกลับ…',
-  'Gemini Imagen กำลังวาดพลังจักรวาล…',
+  'กำลังอ่านสัญลักษณ์ในไพ่แต่ละใบ…',
+  'กำลังถ่ายทอดความหมายสู่ภาพ…',
+  'AI กำลังวาดพลังจักรวาล…',
   'รอสักครู่ กำลังส่งพลังงานนำโชค…',
 ];
 let _wpStepTimer=null;
@@ -1182,8 +1182,21 @@ async function generateWallpaper(){
   const elCount={};
   cards.forEach(c=>elCount[c.el]=(elCount[c.el]||0)+1);
   const domEl=Object.entries(elCount).sort((a,b)=>b[1]-a[1])[0][0];
-  // Card names in English for the image prompt
-  const cardNames=cards.map(c=>`${c.name_en}${c.reversed?' (reversed)':''}`);
+
+  // Rich card data for better image prompts
+  const cardData=cards.map(c=>{
+    const siteKW=SITE_HEADLINE[c.id];
+    const positiveMeaning=siteKW?siteKW.up:(c.up||'');
+    return {
+      id: c.id,
+      name: c.name_en,
+      nameTh: c.name_th,
+      keywords: (c.kw||[]).slice(0,4),
+      positiveMeaning: positiveMeaning.slice(0,80),
+      element: c.el,
+      reversed: c.reversed,
+    };
+  });
 
   // Show modal in loading state
   const modal=document.getElementById('wp-modal');
@@ -1198,7 +1211,7 @@ async function generateWallpaper(){
     const resp=await fetch('/api/wallpaper',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({cards:cardNames, element:domEl})
+      body:JSON.stringify({cards:cardData, element:domEl})
     });
     const data=await resp.json();
     if(!resp.ok) throw new Error(data.error||'ไม่สามารถสร้างภาพได้');
