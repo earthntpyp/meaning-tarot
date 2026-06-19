@@ -2,105 +2,114 @@ const express = require('express');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 8080;
-const GEMINI_KEY = process.env.GEMINI_API_KEY;
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY; // optional — for better prompts
+const GEMINI_KEY = process.env.GEMINI_API_KEY;       // optional — fallback prompt
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-async function buildImagePrompt(cards, element) {
-  const instruction = `Create a detailed image generation prompt for an iPhone wallpaper that brings good luck.
+/* --- Built-in prompt (no API key needed) --- */
+function builtInPrompt(cards, element) {
+  const elStyle = {
+    fire:   'fiery crimson and gold flames, phoenix rising, burning sacred stars',
+    water:  'deep ocean blue, silver moonlight reflections, lotus on still water',
+    air:    'golden wind swirls, floating feathers, lightning through ethereal clouds',
+    earth:  'emerald lotus flowers, golden leaves, crystal cave with glowing gems',
+    spirit: 'violet cosmic energy, divine white light rays, celestial portal opening',
+  }[element] || 'golden mystical light, sacred geometry, cosmic energy swirls';
 
-Tarot cards from this reading: ${cards.join(', ')}
-Dominant element: ${element || 'spirit'}
-
-Requirements:
-- Vertical portrait orientation (9:16 aspect ratio for iPhone)
-- Dark mystical atmosphere, deep purple and midnight blue sky
-- Gold and celestial light accents, shimmering aura
-- Sacred geometry patterns (mandalas, stars, sacred symbols)
-- Flowing energy waves in colors matching the element: ${element}
-- Flowers of good fortune: lotus, chrysanthemum, or peonies
-- Glowing celestial objects: crescent moon, stars, cosmic nebula
-- Auspicious golden patterns, protective light beams
-- Ultra-detailed, ethereal, magical, photorealistic digital art
-- Feeling: protective, lucky, abundant, mystical
-
-Write ONLY the image generation prompt in English. No explanations.`;
-
-  if (ANTHROPIC_KEY) {
-    // Use Claude (Co) for prompt generation
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5',
-        max_tokens: 600,
-        system: 'You are a master of mystical art and tarot. Create vivid, detailed image generation prompts.',
-        messages: [{ role: 'user', content: instruction }],
-      })
-    });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error?.message || JSON.stringify(data));
-    return { prompt: data.content[0].text.trim(), source: 'claude' };
-  } else {
-    // Fallback: use Gemini text
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: instruction }] }] })
-      }
-    );
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(JSON.stringify(data));
-    return { prompt: data.candidates[0].content.parts[0].text.trim(), source: 'gemini' };
-  }
+  return `Mystical tarot lucky wallpaper, vertical portrait 9:16 for iPhone, deep midnight purple and indigo background, ${elStyle}, ${cards.slice(0, 3).join(' and ')} tarot card energy, ornate gold mandala sacred geometry, crescent moon and stars, glowing auspicious golden symbols, protective divine light beams, ultra detailed magical art, cinematic ethereal atmosphere, 4K`;
 }
 
+/* --- Claude (Co) prompt generation --- */
+async function promptViaClaude(cards, element) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5',
+      max_tokens: 400,
+      messages: [{
+        role: 'user',
+        content: `Create a vivid image generation prompt (max 120 words) for a mystical lucky iPhone wallpaper.
+Tarot cards: ${cards.join(', ')}
+Dominant element: ${element}
+Style: dark midnight purple background, shimmering gold accents, sacred geometry mandala, celestial moon and stars, auspicious protective symbols, vertical 9:16 portrait for iPhone, ultra detailed ethereal magical art.
+Write ONLY the image prompt in English, no explanation.`
+      }]
+    })
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.error?.message || 'Claude API error');
+  return data.content[0].text.trim();
+}
+
+/* --- Gemini text prompt generation --- */
+async function promptViaGemini(cards, element) {
+  const resp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `Create a vivid image prompt (max 120 words) for a mystical lucky iPhone wallpaper. Cards: ${cards.join(', ')}. Element: ${element}. Style: dark purple, gold sacred geometry, celestial, 9:16 portrait. English only, no explanation.`
+          }]
+        }]
+      })
+    }
+  );
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(JSON.stringify(data));
+  return data.candidates[0].content.parts[0].text.trim();
+}
+
+/* --- /api/wallpaper endpoint --- */
 app.post('/api/wallpaper', async (req, res) => {
-  if (!GEMINI_KEY) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY not configured on server' });
-  }
   const { cards, element } = req.body;
   if (!cards || !cards.length) return res.status(400).json({ error: 'cards required' });
 
   try {
-    // Step 1: Generate image prompt (Claude if key available, else Gemini)
-    const { prompt: imagePrompt, source: promptSource } = await buildImagePrompt(cards, element);
-
-    // Step 2: Generate image with Imagen 3
-    const imgResp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${GEMINI_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          instances: [{ prompt: imagePrompt }],
-          parameters: { aspectRatio: '9:16', sampleCount: 1 }
-        })
-      }
-    );
-
-    const imgData = await imgResp.json();
-    if (!imgResp.ok) {
-      throw new Error(imgData.error?.message || JSON.stringify(imgData));
-    }
-    if (!imgData.predictions || !imgData.predictions[0]) {
-      throw new Error('No image generated. Check Imagen API access.');
+    // Step 1: Generate image prompt (best available source)
+    let imagePrompt, promptSource;
+    if (ANTHROPIC_KEY) {
+      imagePrompt = await promptViaClaude(cards, element);
+      promptSource = 'Claude';
+    } else if (GEMINI_KEY) {
+      imagePrompt = await promptViaGemini(cards, element);
+      promptSource = 'Gemini';
+    } else {
+      imagePrompt = builtInPrompt(cards, element);
+      promptSource = 'Built-in';
     }
 
-    const b64 = imgData.predictions[0].bytesBase64Encoded;
-    const mimeType = imgData.predictions[0].mimeType || 'image/png';
+    // Step 2: Generate image via Pollinations.AI (free, no API key needed)
+    const seed = Math.floor(Math.random() * 999999);
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=576&height=1024&model=flux&nologo=true&seed=${seed}`;
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 90000);
+    let imgResp;
+    try {
+      imgResp = await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+    if (!imgResp.ok) throw new Error(`Pollinations returned ${imgResp.status}`);
+
+    const buffer = await imgResp.arrayBuffer();
+    const b64 = Buffer.from(buffer).toString('base64');
+    const mimeType = imgResp.headers.get('content-type') || 'image/jpeg';
+
     res.json({ image: b64, mimeType, prompt: imagePrompt, promptSource });
 
   } catch (err) {
-    console.error('Wallpaper generation error:', err.message);
+    console.error('Wallpaper error:', err.message);
     res.status(500).json({ error: err.message || 'Generation failed' });
   }
 });
