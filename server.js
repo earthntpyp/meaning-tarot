@@ -8,78 +8,78 @@ const GEMINI_KEY = process.env.GEMINI_API_KEY;
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-/* --- Minimal modern tarot symbols (geometric / abstract) --- */
-const CARD_SYMBOLS = {
-  M0:  'single feather floating, open horizon line, small circle sun',
-  M1:  'infinity symbol ∞, four geometric shapes arranged symmetrically, single wand',
-  M2:  'crescent moon silhouette, two vertical lines as pillars, scroll',
-  M3:  'twelve-pointed star, wheat stalks, flowing water line',
-  M4:  'solid square geometry, mountain outline, scepter line',
-  M5:  'two crossed keys, triple horizontal lines, open hands',
-  M6:  'two human silhouettes, radiating lines from above, apple',
-  M7:  'two opposing arrows pointing forward, star canopy, shield',
-  M8:  'infinity symbol above open hands, lion outline, floral wreath',
-  M9:  'solitary lantern glow, single footpath line, star inside',
-  M10: 'spinning circle with four symbols at corners, wheel spokes',
-  M11: 'balanced scale silhouette, double-edged sword vertical, pillar lines',
-  M12: 'inverted figure outline, halo ring, single tree branch',
-  M13: 'white rose, horizon line, setting and rising sun, river bend',
-  M14: 'two cups, flowing water arc between them, triangle in square',
-  M15: 'two loosely linked chains, broken chain link, ascending arrow',
-  M16: 'lightning bolt, crown falling, two figures in free fall, open sky',
-  M17: 'eight-pointed star, water ripple circles, pouring vessel silhouette',
-  M18: 'full moon circle, twin towers outline, still water reflection',
-  M19: 'large sun circle, sunflower outline, child silhouette, radiant lines',
-  M20: 'trumpet blowing, rising figure silhouette, cross inside circle',
-  M21: 'wreath circle, dancing figure inside, four corner icons',
+/* --- Tarot card visual descriptions for 3D render --- */
+const CARD_VISUALS = {
+  M0: 'The Fool card — young adventurer stepping forward joyfully, white dog, bright sun, flower',
+  M1: 'The Magician card — robed figure with wand raised, roses and lilies, infinity halo',
+  M2: 'The High Priestess card — mysterious woman between two pillars, crescent moon crown, veil',
+  M3: 'The Empress card — radiant queen on floral throne, crown of stars, wheat fields, waterfall',
+  M4: 'The Emperor card — powerful king on stone throne, golden scepter, mountain peaks',
+  M5: 'The Hierophant card — wise teacher with two acolytes, golden keys, triple crown',
+  M6: 'The Lovers card — two figures beneath blessing angel, garden, glowing sun',
+  M7: 'The Chariot card — armored warrior with two sphinxes, star canopy, golden armor',
+  M8: 'Strength card — woman gently closing lion mouth, flower garland, infinity above',
+  M9: 'The Hermit card — wise elder with lantern on mountain peak, shining star inside',
+  M10: 'Wheel of Fortune card — golden spinning wheel, sphinx on top, serpent and jackal, four winged creatures',
+  M11: 'Justice card — robed judge with balanced golden scales and upright sword',
+  M12: 'The Hanged Man card — figure peacefully suspended from tree, golden halo glow',
+  M13: 'Death card — white rose, sunrise over river, transformation and renewal energy',
+  M14: 'Temperance card — angel pouring glowing water between golden cups, mountain sunrise',
+  M15: 'The Devil card — broken chains, liberation energy, torch of truth',
+  M16: 'The Tower card — lightning bolt of enlightenment, awakening, breakthrough',
+  M17: 'The Star card — serene figure pouring starlight water, eight-pointed star, seven stars',
+  M18: 'The Moon card — full moon over still water, two towers, mystical reflection',
+  M19: 'The Sun card — radiant golden sun, joyful child on white horse, sunflower field',
+  M20: 'Judgement card — angel blowing trumpet, figures rising in golden light, rebirth',
+  M21: 'The World card — triumphant dancer in laurel wreath, four corner creatures, completion',
 };
 
-/* --- Modern minimal color palettes per element --- */
+/* --- Rich vibrant color palettes per element --- */
 const EL_PALETTE = {
-  fire:  'warm terracotta #C1440E, sand beige #F0DEC4, charcoal #1C1C1C, ember orange accent',
-  water: 'deep navy #0F2340, pale seafoam #C8E6E0, slate blue #4A6FA5, silver white accent',
-  air:   'soft lavender #C9C0D3, warm white #F5F2EE, sage #8FAF8A, gold line accent',
-  earth: 'forest green #2D4A2F, warm stone #C4A882, cream #F4EDE4, matte black accent',
-  spirit:'deep indigo #1A1040, soft violet #9B8EC4, pearl #F0EDFF, silver accent',
+  fire:  'warm golden amber, crimson red, bright copper, glowing ember light',
+  water: 'crystal aquamarine blue, silver moonlight, turquoise, pearl shimmer',
+  air:   'golden yellow, sky blue, lavender, radiant bright white',
+  earth: 'lush emerald green, warm gold, jade crystal, rich amber',
+  spirit:'royal deep purple, violet, divine gold, radiant white light',
 };
 
-/* --- Minimal style base --- */
-const MINIMAL_STYLE = `Modern minimalist art, full bleed vertical background 9:16, no device, no frame, no border. Clean geometric composition, generous negative space, flat design with subtle depth. Premium design aesthetic — think Dieter Rams meets Japanese wabi-sabi. Muted sophisticated color palette, maximum 3 colors. Thin crisp elegant line art, simple abstract shapes. Ultra sharp edges, crystal clear, no blur, no noise. No clutter, no gradients, no ornate decorations. Gallery-quality artwork, vector-like precision.`;
+/* --- Base style direction (matches reference image feel) --- */
+const BASE_STYLE = `Photorealistic 3D digital art, vertical 9:16 full bleed background, no device frame, no phone, no border. Tarot cards displayed as physical 3D cards with classic Rider-Waite illustrations, floating and beautifully arranged in scene. Surrounded by scattered gold coins, glowing crystal gems, and lotus flowers. Rich vibrant colors, dramatic cinematic lighting, depth of field bokeh background. Abundant, lucky, prosperous atmosphere. Ultra detailed, professional 3D render, 8K.`;
 
-/* --- Negative terms to block device mockup --- */
-const NEGATIVE = 'no phone, no smartphone, no iPhone, no device, no frame, no border, no screen, no mockup, no hand, no person holding phone';
+/* --- Negative prompt --- */
+const NEGATIVE = encodeURIComponent('phone, smartphone, iPhone, device, frame, border, screen, mockup, cartoon, flat, 2D, low quality, blurry');
 
-/* --- Quality suffix appended to every prompt --- */
-const QUALITY_SUFFIX = `, ultra sharp, crystal clear, 4K, crisp edges, high contrast, professional quality, no blur, no noise, no artifacts, ${NEGATIVE}`;
+/* --- Quality suffix --- */
+const QUALITY_SUFFIX = ', ultra detailed, photorealistic, 8K, sharp focus, cinematic lighting, professional render, no blur, no artifacts';
 
-/* --- Build card lines for prompt --- */
+/* --- Describe cards for prompt --- */
 function describeCards(cards) {
   return cards.map(c => {
-    const symbol = CARD_SYMBOLS[c.id] || `${c.name} abstract symbol`;
+    const visual = CARD_VISUALS[c.id] || `${c.name} tarot card`;
     const kws = (c.keywords || []).slice(0, 3).join(', ');
     const meaning = c.positiveMeaning || '';
-    return `• ${c.name}: geometric symbol — ${symbol} | energy: ${kws} | ${meaning}`;
+    return `• ${visual} — energy: ${kws}${meaning ? ', ' + meaning : ''}`;
   }).join('\n');
 }
 
-/* --- Built-in prompt (no API key) --- */
+/* --- Built-in prompt --- */
 function builtInPrompt(cards, element, isBirthCard = false) {
-  const palette = EL_PALETTE[element] || 'deep indigo, pearl white, silver';
-  const symbols = cards.map(c => {
-    const sym = CARD_SYMBOLS[c.id] || `${c.name} minimal symbol`;
-    const kw = (c.keywords || []).slice(0, 2).join(', ');
-    return `${sym} representing ${kw}`;
+  const palette = EL_PALETTE[element] || 'royal purple, gold, crystal white';
+  const cardLines = cards.map(c => {
+    const visual = CARD_VISUALS[c.id] || `${c.name} tarot card`;
+    return visual;
   }).join('; ');
-  const intent = isBirthCard
-    ? 'personal life path energy, destiny and soul purpose, identity and inner strength'
-    : 'positive affirming energy, good luck and protection';
 
-  return `${MINIMAL_STYLE} Color palette: ${palette}. Centered composition featuring minimalist tarot symbols: ${symbols}. ${intent}. Single focal point, thin line icons, clean typography space, ample breathing room. Ultra clean modern design, no noise, no texture${QUALITY_SUFFIX}.`;
+  const intent = isBirthCard
+    ? 'soul purpose and destiny energy, timeless personal power'
+    : 'good luck, abundance and prosperity, positive manifestation';
+
+  return `${BASE_STYLE} Featured tarot cards as 3D physical objects: ${cardLines}. Color palette: ${palette}. Theme: ${intent}. Lotus flowers, gold coins, glowing gems scattered throughout. Majestic nature background — mountains, celestial sky, or serene lake. Warm golden hour light rays${QUALITY_SUFFIX}.`;
 }
 
 /* --- Claude prompt --- */
 async function promptViaClaude(cards, element, isBirthCard = false) {
-  const palette = EL_PALETTE[element] || 'deep indigo and pearl white';
+  const palette = EL_PALETTE[element] || 'royal purple, gold, crystal white';
   const cardDesc = describeCards(cards);
 
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -92,27 +92,28 @@ async function promptViaClaude(cards, element, isBirthCard = false) {
     body: JSON.stringify({
       model: 'claude-haiku-4-5',
       max_tokens: 500,
-      system: 'You are a top creative director specializing in minimal modern design. Write precise image generation prompts for premium wallpapers.',
+      system: 'You are a creative director for luxury 3D digital art. Write vivid, detailed prompts for photorealistic wallpaper renders.',
       messages: [{
         role: 'user',
-        content: `Create an image generation prompt for a modern minimalist vertical background artwork (9:16 portrait, full bleed, NO device frame or phone) inspired by these tarot cards.
+        content: `Create an image generation prompt for a photorealistic 3D vertical wallpaper (9:16, full bleed, NO phone or device frame).
 
-${isBirthCard ? 'Context: BIRTH CARD — soul energy, life path, destiny. Timeless, identity-defining, empowering.' : 'Context: TAROT READING — current energy, good luck, positive manifestation.'}
+Look inspired by: abundance wallpapers with physical tarot cards floating in a rich 3D scene, surrounded by gold coins, crystals, lotus flowers, with a majestic nature or celestial background. Think premium, lush, detailed — NOT minimal.
 
-Cards and their minimal symbols:
+${isBirthCard ? 'Theme: BIRTH CARD / SOUL CARD — timeless personal power, destiny, identity. Regal, empowering, majestic.' : 'Theme: LUCKY TAROT READING — abundance, good fortune, prosperity, positive energy manifesting.'}
+
+Cards to feature as 3D physical objects floating in the scene:
 ${cardDesc}
 
-Design direction:
-- MINIMAL and MODERN — clean, gallery-quality art poster
-- Tarot symbols rendered as SIMPLE GEOMETRIC SHAPES or THIN CRISP LINE ART
-- Color palette: ${palette} (max 3 colors, muted and sophisticated)
-- Full bleed background — no border, no frame, no device, no screen
-- Large negative space, single focal point, no clutter
-- Aesthetic: Bauhaus / Japanese minimalism / premium art print
-- ${isBirthCard ? 'Timeless, personal, soul-defining' : 'Positive, uplifting, lucky'}
-- Ultra sharp, crisp vector-like edges, no blur, no noise
+Direction:
+- Show each tarot card as a REAL PHYSICAL 3D CARD with classic illustrated art, slightly tilted and floating
+- Surround with: scattered gold coins, glowing crystal gems, lotus flowers, light rays
+- Background: majestic mountains, celestial sky, or serene water — rich and colorful
+- Color palette: ${palette}
+- Dramatic cinematic lighting, depth of field, volumetric light rays
+- Ultra detailed, photorealistic 3D render, 8K quality
+- Full bleed — no border, no frame, no device
 
-Write ONLY the image generation prompt in English. Max 160 words.`
+Write ONLY the image generation prompt in English. Max 180 words.`
       }]
     })
   });
@@ -123,7 +124,7 @@ Write ONLY the image generation prompt in English. Max 160 words.`
 
 /* --- Gemini prompt --- */
 async function promptViaGemini(cards, element, isBirthCard = false) {
-  const palette = EL_PALETTE[element] || 'deep indigo and pearl white';
+  const palette = EL_PALETTE[element] || 'royal purple, gold, crystal white';
   const cardDesc = describeCards(cards);
 
   const resp = await fetch(
@@ -134,11 +135,12 @@ async function promptViaGemini(cards, element, isBirthCard = false) {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `Create a minimal modern art image prompt for a vertical background artwork (9:16 portrait, full bleed, NO phone frame or device).
-${isBirthCard ? 'Birth card / soul energy — timeless, identity-defining, empowering.' : 'Lucky tarot reading — uplifting, positive, good fortune.'}
-Tarot cards:
+            text: `Create an image prompt for a photorealistic 3D vertical wallpaper (9:16, full bleed, no phone frame).
+Style: lush abundant 3D scene with physical tarot cards floating, gold coins, crystal gems, lotus flowers, majestic nature background.
+${isBirthCard ? 'Theme: soul power and destiny.' : 'Theme: abundance, good luck, prosperity.'}
+Cards (as 3D physical objects):
 ${cardDesc}
-Style: minimalist, Bauhaus, premium art print. Palette: ${palette}, max 3 colors. Geometric tarot symbols, large negative space, no device, no frame, no border, ultra sharp crisp edges. English only, max 160 words, prompt only.`
+Palette: ${palette}. Cinematic lighting, 8K photorealistic. No device, no border. English only, max 180 words, prompt only.`
           }]
         }]
       })
@@ -168,10 +170,9 @@ app.post('/api/wallpaper', async (req, res) => {
       promptSource = 'Built-in';
     }
 
-    // Pollinations.AI — 1170×2532 matches iPhone 14/15 native resolution
+    // Pollinations.AI — iPhone native resolution, FLUX model
     const seed = Math.floor(Math.random() * 999999);
-    const negativePrompt = encodeURIComponent('phone, smartphone, iPhone, device frame, screen border, mockup, hand holding phone, UI elements');
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1170&height=2532&model=flux&nologo=true&seed=${seed}&negative_prompt=${negativePrompt}`;
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1170&height=2532&model=flux&nologo=true&seed=${seed}&negative_prompt=${NEGATIVE}`;
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 90000);
