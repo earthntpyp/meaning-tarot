@@ -60,19 +60,22 @@ function describeCards(cards) {
 }
 
 /* --- Built-in prompt (no API key) --- */
-function builtInPrompt(cards, element) {
+function builtInPrompt(cards, element, isBirthCard = false) {
   const palette = EL_PALETTE[element] || 'deep indigo, pearl white, silver';
   const symbols = cards.map(c => {
     const sym = CARD_SYMBOLS[c.id] || `${c.name} minimal symbol`;
     const kw = (c.keywords || []).slice(0, 2).join(', ');
     return `${sym} representing ${kw}`;
   }).join('; ');
+  const intent = isBirthCard
+    ? 'personal life path energy, destiny and soul purpose, identity and inner strength'
+    : 'positive affirming energy, good luck and protection';
 
-  return `${MINIMAL_STYLE} Color palette: ${palette}. Centered composition featuring minimalist tarot symbols: ${symbols}. Single focal point, thin line icons, clean typography space, ample breathing room. Positive affirming energy. Ultra clean modern design, no noise, no texture${QUALITY_SUFFIX}.`;
+  return `${MINIMAL_STYLE} Color palette: ${palette}. Centered composition featuring minimalist tarot symbols: ${symbols}. ${intent}. Single focal point, thin line icons, clean typography space, ample breathing room. Ultra clean modern design, no noise, no texture${QUALITY_SUFFIX}.`;
 }
 
 /* --- Claude prompt --- */
-async function promptViaClaude(cards, element) {
+async function promptViaClaude(cards, element, isBirthCard = false) {
   const palette = EL_PALETTE[element] || 'deep indigo and pearl white';
   const cardDesc = describeCards(cards);
 
@@ -91,6 +94,8 @@ async function promptViaClaude(cards, element) {
         role: 'user',
         content: `Create an image generation prompt for a modern minimalist iPhone wallpaper (9:16) inspired by these tarot cards.
 
+${isBirthCard ? 'Context: This is a BIRTH CARD wallpaper — represents the person\'s soul energy, life path and destiny. Make it feel personal, identity-defining, and empowering.' : 'Context: This is a READING wallpaper — represents the current energy and good luck for the person.'}
+
 Cards and their minimal symbols:
 ${cardDesc}
 
@@ -100,7 +105,7 @@ Design direction:
 - Color palette: ${palette} (maximum 3 colors, muted and sophisticated)
 - Large negative space, single clear focal point, absolutely no clutter
 - Aesthetic: Dieter Rams / Bauhaus / Japanese minimalism / premium Apple wallpaper
-- Positive, uplifting energy expressed through clean design — not mystical ornate
+- ${isBirthCard ? 'Timeless, personal, soul-defining energy' : 'Positive, uplifting, lucky energy'}
 - No gradients, no ornate details, no heavy textures, no noise
 - End prompt with: ultra sharp, crystal clear, 4K, crisp edges, vector precision
 
@@ -114,7 +119,7 @@ Write ONLY the image generation prompt in English. Max 160 words.`
 }
 
 /* --- Gemini prompt --- */
-async function promptViaGemini(cards, element) {
+async function promptViaGemini(cards, element, isBirthCard = false) {
   const palette = EL_PALETTE[element] || 'deep indigo and pearl white';
   const cardDesc = describeCards(cards);
 
@@ -127,6 +132,7 @@ async function promptViaGemini(cards, element) {
         contents: [{
           parts: [{
             text: `Create a minimal modern art image prompt for iPhone wallpaper (9:16).
+${isBirthCard ? 'This is a birth card / soul card wallpaper — timeless, identity-defining, empowering personal energy.' : 'This is a lucky tarot reading wallpaper — uplifting, positive, good fortune energy.'}
 Tarot cards:
 ${cardDesc}
 Style: minimalist, modern, Bauhaus-inspired, premium design. Palette: ${palette}, max 3 colors. Simple geometric tarot symbols, large negative space, no clutter, ultra sharp crisp edges, 4K quality. English only, max 160 words, prompt only.`
@@ -142,19 +148,20 @@ Style: minimalist, modern, Bauhaus-inspired, premium design. Palette: ${palette}
 
 /* --- /api/wallpaper --- */
 app.post('/api/wallpaper', async (req, res) => {
-  const { cards, element } = req.body;
+  const { cards, element, context } = req.body;
   if (!cards || !cards.length) return res.status(400).json({ error: 'cards required' });
+  const isBirthCard = context === 'birthcard';
 
   try {
     let imagePrompt, promptSource;
     if (ANTHROPIC_KEY) {
-      imagePrompt = await promptViaClaude(cards, element);
+      imagePrompt = await promptViaClaude(cards, element, isBirthCard);
       promptSource = 'Claude';
     } else if (GEMINI_KEY) {
-      imagePrompt = await promptViaGemini(cards, element);
+      imagePrompt = await promptViaGemini(cards, element, isBirthCard);
       promptSource = 'Gemini';
     } else {
-      imagePrompt = builtInPrompt(cards, element);
+      imagePrompt = builtInPrompt(cards, element, isBirthCard);
       promptSource = 'Built-in';
     }
 
