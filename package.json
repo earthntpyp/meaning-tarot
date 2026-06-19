@@ -2,9 +2,10 @@
   "name": "meaning-tarot",
   "version": "1.0.0",
   "scripts": {
-    "start": "serve . -l ${PORT:-8080}"
+    "start": "node server.js"
   },
   "dependencies": {
+    "express": "^4.22.2",
     "serve": "^14.2.3"
   }
 }
