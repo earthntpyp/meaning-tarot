@@ -44,10 +44,13 @@ const EL_PALETTE = {
 };
 
 /* --- Minimal style base --- */
-const MINIMAL_STYLE = `Modern minimalist art poster for iPhone wallpaper, 9:16 portrait orientation. Clean geometric composition, generous negative space, flat design with subtle depth. Premium design aesthetic — think Dieter Rams meets Japanese wabi-sabi. Muted sophisticated color palette, maximum 3 colors. Thin crisp elegant line art, simple abstract shapes. Ultra sharp edges, crystal clear, no blur, no noise. No clutter, no gradients, no ornate decorations. Gallery-quality, vector-like precision, professional print quality.`;
+const MINIMAL_STYLE = `Modern minimalist art, full bleed vertical background 9:16, no device, no frame, no border. Clean geometric composition, generous negative space, flat design with subtle depth. Premium design aesthetic — think Dieter Rams meets Japanese wabi-sabi. Muted sophisticated color palette, maximum 3 colors. Thin crisp elegant line art, simple abstract shapes. Ultra sharp edges, crystal clear, no blur, no noise. No clutter, no gradients, no ornate decorations. Gallery-quality artwork, vector-like precision.`;
+
+/* --- Negative terms to block device mockup --- */
+const NEGATIVE = 'no phone, no smartphone, no iPhone, no device, no frame, no border, no screen, no mockup, no hand, no person holding phone';
 
 /* --- Quality suffix appended to every prompt --- */
-const QUALITY_SUFFIX = ', ultra sharp, crystal clear, 4K resolution, crisp edges, high contrast, professional quality, no blur, no noise, no artifacts';
+const QUALITY_SUFFIX = `, ultra sharp, crystal clear, 4K, crisp edges, high contrast, professional quality, no blur, no noise, no artifacts, ${NEGATIVE}`;
 
 /* --- Build card lines for prompt --- */
 function describeCards(cards) {
@@ -92,22 +95,22 @@ async function promptViaClaude(cards, element, isBirthCard = false) {
       system: 'You are a top creative director specializing in minimal modern design. Write precise image generation prompts for premium wallpapers.',
       messages: [{
         role: 'user',
-        content: `Create an image generation prompt for a modern minimalist iPhone wallpaper (9:16) inspired by these tarot cards.
+        content: `Create an image generation prompt for a modern minimalist vertical background artwork (9:16 portrait, full bleed, NO device frame or phone) inspired by these tarot cards.
 
-${isBirthCard ? 'Context: This is a BIRTH CARD wallpaper — represents the person\'s soul energy, life path and destiny. Make it feel personal, identity-defining, and empowering.' : 'Context: This is a READING wallpaper — represents the current energy and good luck for the person.'}
+${isBirthCard ? 'Context: BIRTH CARD — soul energy, life path, destiny. Timeless, identity-defining, empowering.' : 'Context: TAROT READING — current energy, good luck, positive manifestation.'}
 
 Cards and their minimal symbols:
 ${cardDesc}
 
 Design direction:
-- MINIMAL and MODERN — clean, contemporary, gallery-quality art poster style
-- Incorporate the tarot card symbols as SIMPLE GEOMETRIC SHAPES or THIN CRISP LINE ART
-- Color palette: ${palette} (maximum 3 colors, muted and sophisticated)
-- Large negative space, single clear focal point, absolutely no clutter
-- Aesthetic: Dieter Rams / Bauhaus / Japanese minimalism / premium Apple wallpaper
-- ${isBirthCard ? 'Timeless, personal, soul-defining energy' : 'Positive, uplifting, lucky energy'}
-- No gradients, no ornate details, no heavy textures, no noise
-- End prompt with: ultra sharp, crystal clear, 4K, crisp edges, vector precision
+- MINIMAL and MODERN — clean, gallery-quality art poster
+- Tarot symbols rendered as SIMPLE GEOMETRIC SHAPES or THIN CRISP LINE ART
+- Color palette: ${palette} (max 3 colors, muted and sophisticated)
+- Full bleed background — no border, no frame, no device, no screen
+- Large negative space, single focal point, no clutter
+- Aesthetic: Bauhaus / Japanese minimalism / premium art print
+- ${isBirthCard ? 'Timeless, personal, soul-defining' : 'Positive, uplifting, lucky'}
+- Ultra sharp, crisp vector-like edges, no blur, no noise
 
 Write ONLY the image generation prompt in English. Max 160 words.`
       }]
@@ -131,11 +134,11 @@ async function promptViaGemini(cards, element, isBirthCard = false) {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `Create a minimal modern art image prompt for iPhone wallpaper (9:16).
-${isBirthCard ? 'This is a birth card / soul card wallpaper — timeless, identity-defining, empowering personal energy.' : 'This is a lucky tarot reading wallpaper — uplifting, positive, good fortune energy.'}
+            text: `Create a minimal modern art image prompt for a vertical background artwork (9:16 portrait, full bleed, NO phone frame or device).
+${isBirthCard ? 'Birth card / soul energy — timeless, identity-defining, empowering.' : 'Lucky tarot reading — uplifting, positive, good fortune.'}
 Tarot cards:
 ${cardDesc}
-Style: minimalist, modern, Bauhaus-inspired, premium design. Palette: ${palette}, max 3 colors. Simple geometric tarot symbols, large negative space, no clutter, ultra sharp crisp edges, 4K quality. English only, max 160 words, prompt only.`
+Style: minimalist, Bauhaus, premium art print. Palette: ${palette}, max 3 colors. Geometric tarot symbols, large negative space, no device, no frame, no border, ultra sharp crisp edges. English only, max 160 words, prompt only.`
           }]
         }]
       })
@@ -167,7 +170,8 @@ app.post('/api/wallpaper', async (req, res) => {
 
     // Pollinations.AI — 1170×2532 matches iPhone 14/15 native resolution
     const seed = Math.floor(Math.random() * 999999);
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1170&height=2532&model=flux&nologo=true&enhance=true&seed=${seed}`;
+    const negativePrompt = encodeURIComponent('phone, smartphone, iPhone, device frame, screen border, mockup, hand holding phone, UI elements');
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1170&height=2532&model=flux&nologo=true&seed=${seed}&negative_prompt=${negativePrompt}`;
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 90000);
