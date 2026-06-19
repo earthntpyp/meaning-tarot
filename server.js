@@ -8,68 +8,69 @@ const GEMINI_KEY = process.env.GEMINI_API_KEY;
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-/* --- Iconic tarot visuals for built-in prompt --- */
-const CARD_VISUALS = {
-  M0:'carefree traveler on cliff edge, white sun rising, little white dog, colorful bindle',
-  M1:'magician with wand raised to sky, infinity lemniscate halo, roses and lilies altar, four suits',
-  M2:'high priestess between two pillars, crescent moon crown, pomegranate veil, scroll of wisdom',
-  M3:'empress on throne of nature, wheat fields, waterfall, crown of twelve stars, lush greenery',
-  M4:'emperor on stone throne, mountain peaks, golden scepter and orb, red robe of power',
-  M5:'hierophant with two acolytes, golden keys, triple crown, sacred scrolls',
-  M6:'angel blessing two lovers, garden of eden, sun radiance, mountain behind them',
-  M7:'charioteer in starry canopy, two sphinxes, city behind him, victorious golden armor',
-  M8:'woman gently closing lion mouth with garland of flowers, infinity symbol above her head',
-  M9:'hermit alone on snowy peak, lantern with glowing star, long staff of wisdom',
-  M10:'wheel of fortune with sphinx on top, serpent descending, anubis ascending, four corner creatures',
-  M11:'justice with balanced scales and upright sword, red robe, two stone pillars',
-  M12:'hanged man suspended from living tree, halo of light around head, serene expression',
-  M13:'skeleton knight on white horse, flag with white rose, sunrise over distant river',
-  M14:'angel pouring water between two cups, one foot on land one in water, sun between mountains',
-  M15:'baphomet figure, two human figures loosely chained, inverted pentagram, dark cave',
-  M16:'lightning striking tower, two figures falling, crown blown off, chaos and sudden change',
-  M17:'naked woman kneeling at pool, eight-pointed star, seven smaller stars, bird in tree',
-  M18:'full moon over ocean path, lobster emerging from water, two towers, wolf and dog howling',
-  M19:'radiant sun with child on white horse, sunflowers, red banner, wall of sunflowers',
-  M20:'angel blowing trumpet, people rising from graves, red cross on white banner, mountain range',
-  M21:'dancing woman wrapped in purple cloth, wreath of victory, four corner creatures, completion',
+/* --- Minimal modern tarot symbols (geometric / abstract) --- */
+const CARD_SYMBOLS = {
+  M0:  'single feather floating, open horizon line, small circle sun',
+  M1:  'infinity symbol ∞, four geometric shapes arranged symmetrically, single wand',
+  M2:  'crescent moon silhouette, two vertical lines as pillars, scroll',
+  M3:  'twelve-pointed star, wheat stalks, flowing water line',
+  M4:  'solid square geometry, mountain outline, scepter line',
+  M5:  'two crossed keys, triple horizontal lines, open hands',
+  M6:  'two human silhouettes, radiating lines from above, apple',
+  M7:  'two opposing arrows pointing forward, star canopy, shield',
+  M8:  'infinity symbol above open hands, lion outline, floral wreath',
+  M9:  'solitary lantern glow, single footpath line, star inside',
+  M10: 'spinning circle with four symbols at corners, wheel spokes',
+  M11: 'balanced scale silhouette, double-edged sword vertical, pillar lines',
+  M12: 'inverted figure outline, halo ring, single tree branch',
+  M13: 'white rose, horizon line, setting and rising sun, river bend',
+  M14: 'two cups, flowing water arc between them, triangle in square',
+  M15: 'two loosely linked chains, broken chain link, ascending arrow',
+  M16: 'lightning bolt, crown falling, two figures in free fall, open sky',
+  M17: 'eight-pointed star, water ripple circles, pouring vessel silhouette',
+  M18: 'full moon circle, twin towers outline, still water reflection',
+  M19: 'large sun circle, sunflower outline, child silhouette, radiant lines',
+  M20: 'trumpet blowing, rising figure silhouette, cross inside circle',
+  M21: 'wreath circle, dancing figure inside, four corner icons',
 };
 
+/* --- Modern minimal color palettes per element --- */
 const EL_PALETTE = {
-  fire:  'warm crimson, burnt orange, golden flame tones, ember glow',
-  water: 'deep sapphire, silver moonlit blue, teal, pearl shimmer',
-  air:   'violet, lavender, pale gold, whisps of silver cloud',
-  earth: 'deep forest green, amber, rich brown, emerald crystal glow',
-  spirit:'deep violet, cosmic purple, white divine light, aurora hues',
+  fire:  'warm terracotta #C1440E, sand beige #F0DEC4, charcoal #1C1C1C, ember orange accent',
+  water: 'deep navy #0F2340, pale seafoam #C8E6E0, slate blue #4A6FA5, silver white accent',
+  air:   'soft lavender #C9C0D3, warm white #F5F2EE, sage #8FAF8A, gold line accent',
+  earth: 'forest green #2D4A2F, warm stone #C4A882, cream #F4EDE4, matte black accent',
+  spirit:'deep indigo #1A1040, soft violet #9B8EC4, pearl #F0EDFF, silver accent',
 };
 
-/* --- Build card description lines for prompt --- */
+/* --- Minimal style system prompt --- */
+const MINIMAL_STYLE = `Modern minimalist art poster, iPhone wallpaper 9:16 portrait. Clean geometric composition, lots of negative space, flat design with subtle depth. Premium design aesthetic — think Dieter Rams meets Japanese wabi-sabi. Muted sophisticated color palette, no more than 3 colors. Thin elegant line art, simple abstract shapes. No clutter, no gradients, no ornate decorations. Ultra clean, contemporary, gallery-quality.`;
+
+/* --- Build card lines for prompt --- */
 function describeCards(cards) {
   return cards.map(c => {
-    const visual = CARD_VISUALS[c.id] || `${c.name} tarot card energy`;
-    const kws = (c.keywords || []).join(', ');
+    const symbol = CARD_SYMBOLS[c.id] || `${c.name} abstract symbol`;
+    const kws = (c.keywords || []).slice(0, 3).join(', ');
     const meaning = c.positiveMeaning || '';
-    const orientation = c.reversed
-      ? 'energy turning inward, inner transformation'
-      : 'radiant outward energy, positive manifestation';
-    return `[${c.name}]: visuals — ${visual}; symbolizing ${kws}; ${meaning}; ${orientation}`;
+    return `• ${c.name}: geometric symbol — ${symbol} | energy: ${kws} | ${meaning}`;
   }).join('\n');
 }
 
-/* --- Built-in prompt (no API key needed) --- */
+/* --- Built-in prompt (no API key) --- */
 function builtInPrompt(cards, element) {
-  const palette = EL_PALETTE[element] || 'deep purple, gold, cosmic silver';
-  const cardLines = cards.map(c => {
-    const visual = CARD_VISUALS[c.id] || `${c.name} sacred symbols`;
-    const kws = (c.keywords || []).slice(0, 3).join(', ');
-    return `${c.name} (${visual}, ${kws})`;
+  const palette = EL_PALETTE[element] || 'deep indigo, pearl white, silver';
+  const symbols = cards.map(c => {
+    const sym = CARD_SYMBOLS[c.id] || `${c.name} minimal symbol`;
+    const kw = (c.keywords || []).slice(0, 2).join(', ');
+    return `${sym} representing ${kw}`;
   }).join('; ');
 
-  return `Mystical tarot iPhone wallpaper 9:16 portrait, featuring tarot imagery: ${cardLines}. Color palette: ${palette}, dark midnight background. Sacred geometry mandala center, celestial crescent moon and stars, golden auspicious symbols, lotus flowers blooming, radiant divine light beams. Positive energy, protection and good fortune. Ultra detailed magical art, ethereal cinematic lighting, 4K.`;
+  return `${MINIMAL_STYLE} Color palette: ${palette}. Centered composition featuring minimalist tarot symbols: ${symbols}. Single focal point, thin line icons, clean typography space, ample breathing room. Positive affirming energy. Ultra clean modern design, no noise, no texture.`;
 }
 
-/* --- Claude (Co) prompt --- */
+/* --- Claude prompt --- */
 async function promptViaClaude(cards, element) {
-  const palette = EL_PALETTE[element] || 'deep purple and gold';
+  const palette = EL_PALETTE[element] || 'deep indigo and pearl white';
   const cardDesc = describeCards(cards);
 
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -82,25 +83,24 @@ async function promptViaClaude(cards, element) {
     body: JSON.stringify({
       model: 'claude-haiku-4-5',
       max_tokens: 500,
-      system: 'You are a master of mystical art and tarot symbolism. Write vivid, poetic image generation prompts that incorporate specific tarot card visual imagery.',
+      system: 'You are a top creative director specializing in minimal modern design. Write precise image generation prompts for premium wallpapers.',
       messages: [{
         role: 'user',
-        content: `Create an image generation prompt for a lucky iPhone wallpaper based on these tarot cards.
+        content: `Create an image generation prompt for a modern minimalist iPhone wallpaper (9:16) inspired by these tarot cards.
 
-Cards drawn:
+Cards and their minimal symbols:
 ${cardDesc}
 
-Requirements:
-- Incorporate the SPECIFIC visual symbols from each card listed above into the scene
-- Transform all symbolism into POSITIVE, lucky, protective energy (even reversed cards)
-- Dominant element: ${element} — use palette: ${palette}
-- Dark midnight purple/indigo background sky
-- Golden sacred geometry mandalas and auspicious symbols
-- Celestial moon and stars
-- Vertical 9:16 portrait for iPhone wallpaper
-- Ultra detailed, ethereal, magical art, cinematic 4K
+Design direction:
+- MINIMAL and MODERN — clean, contemporary, gallery-quality art poster style
+- Incorporate the tarot card symbols as SIMPLE GEOMETRIC SHAPES or THIN LINE ART
+- Color palette: ${palette} (maximum 3 colors, muted and sophisticated)
+- Large negative space, single clear focal point, no clutter
+- Aesthetic: Dieter Rams / Bauhaus / Japanese minimalism / premium Apple wallpaper
+- Positive, uplifting, lucky energy expressed through clean design — not mystical ornate
+- No gradients, no ornate details, no heavy textures
 
-Write ONLY the image generation prompt in English. Max 160 words.`
+Write ONLY the image generation prompt in English. Max 150 words.`
       }]
     })
   });
@@ -109,9 +109,9 @@ Write ONLY the image generation prompt in English. Max 160 words.`
   return data.content[0].text.trim();
 }
 
-/* --- Gemini text prompt --- */
+/* --- Gemini prompt --- */
 async function promptViaGemini(cards, element) {
-  const palette = EL_PALETTE[element] || 'deep purple and gold';
+  const palette = EL_PALETTE[element] || 'deep indigo and pearl white';
   const cardDesc = describeCards(cards);
 
   const resp = await fetch(
@@ -122,9 +122,10 @@ async function promptViaGemini(cards, element) {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `Create an image prompt for a lucky iPhone wallpaper (9:16) using these tarot cards:
+            text: `Create a minimal modern art image prompt for iPhone wallpaper (9:16).
+Tarot cards:
 ${cardDesc}
-Incorporate each card's specific visual symbols. Transform all into positive lucky energy. Palette: ${palette}, dark midnight background, gold mandalas, celestial moon and stars. English only, max 160 words, no explanation.`
+Style: minimalist, clean, modern, Bauhaus-inspired, premium design. Color palette: ${palette}, max 3 colors. Simple geometric tarot symbols, large negative space, no clutter. Positive energy. English only, max 150 words, prompt only.`
           }]
         }]
       })
@@ -153,7 +154,7 @@ app.post('/api/wallpaper', async (req, res) => {
       promptSource = 'Built-in';
     }
 
-    // Pollinations.AI — free, no key needed
+    // Pollinations.AI — free, no key needed, FLUX model
     const seed = Math.floor(Math.random() * 999999);
     const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=576&height=1024&model=flux&nologo=true&seed=${seed}`;
 
