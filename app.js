@@ -487,6 +487,31 @@ function showReading(){
   list.innerHTML=state.cards.map((c,i)=>buildReadItem(c,sp.positions[i],i)).join('');
 
   document.getElementById('summary').innerHTML=buildSummary();
+
+  // Yes/No verdict — only for question spreads
+  const yesnoEl=document.getElementById('yesno-verdict');
+  const isQuestion=state.type==='question'||state.type==='question1';
+  if(isQuestion){
+    const v=yesNoVerdict(state.cards);
+    yesnoEl.innerHTML=buildYesNoHTML(v,state.cards);
+    yesnoEl.style.display='flex';
+    yesnoEl.style.flexDirection='column';
+    yesnoEl.style.alignItems='center';
+  } else {
+    yesnoEl.style.display='none';
+    yesnoEl.innerHTML='';
+  }
+
+  // Domain summary — all spreads
+  const domEl=document.getElementById('domain-summary');
+  const domHTML=buildDomainSummary(state.cards);
+  if(domHTML){
+    domEl.innerHTML=domHTML;
+    domEl.style.display='block';
+  } else {
+    domEl.style.display='none';
+  }
+
   show('screen-reading');
 }
 
@@ -662,6 +687,98 @@ function thaiDate(){
 }
 
 function goHome(){ show('screen-home'); }
+
+/* ---------- Yes/No verdict (for ถามไพ่) ---------- */
+const YESNO_SCORE={
+  M0:1, M1:2, M2:0, M3:2, M4:1, M5:1, M6:2, M7:2,
+  M8:2, M9:0, M10:1, M11:0, M12:-1, M13:-1, M14:0,
+  M15:-2, M16:-2, M17:2, M18:-1, M19:2, M20:1, M21:2,
+};
+
+function yesNoVerdict(cards){
+  let total=0, maxW=0;
+  cards.forEach(c=>{
+    const base=YESNO_SCORE[c.id]!==undefined ? YESNO_SCORE[c.id] : (c.type==='major'?1:0.5);
+    const w=c.type==='major'?1.5:1;
+    total+=base*(c.reversed?-1:1)*w;
+    maxW+=Math.abs(base)*w;
+  });
+  const r=maxW>0?total/maxW:0;
+  if(r>0.55)  return {verdict:'ใช่',    sub:'ไพ่บอกชัดว่า ใช่',           color:'#52a84e', bg:'rgba(82,168,78,.12)',  border:'rgba(82,168,78,.35)',  icon:'✅', ratio:r};
+  if(r>0.18)  return {verdict:'น่าจะใช่', sub:'ไพ่โน้มเอียงไปทาง ใช่',      color:'#7ed87a', bg:'rgba(126,216,122,.1)', border:'rgba(126,216,122,.3)', icon:'🟢', ratio:r};
+  if(r>=-0.18)return {verdict:'ยังไม่แน่', sub:'ไพ่บอกว่าจังหวะยังไม่ชัดเจน', color:'#d4af37', bg:'rgba(212,175,55,.1)',  border:'rgba(212,175,55,.35)', icon:'🟡', ratio:r};
+  if(r>=-0.55)return {verdict:'น่าจะไม่', sub:'ไพ่โน้มเอียงไปทาง ยังไม่ใช่',  color:'#f08a6a', bg:'rgba(240,138,106,.1)', border:'rgba(240,138,106,.3)', icon:'🟠', ratio:r};
+  return       {verdict:'ไม่ใช่',   sub:'ไพ่บอกชัดว่า ยังไม่ใช่',         color:'#c8341f', bg:'rgba(200,52,31,.1)',  border:'rgba(200,52,31,.3)',  icon:'❌', ratio:r};
+}
+
+function buildYesNoHTML(v, cards){
+  const steps=5;
+  const filled=Math.round(((v.ratio+1)/2)*steps);
+  const dots=Array.from({length:steps},(_,i)=>
+    `<div class="yesno-dot" style="${i<filled?'background:'+v.color+';border-color:'+v.color:''}"></div>`
+  ).join('');
+  const cardTags=cards.map(c=>
+    `<span class="yesno-card-tag">${c.name_th}${c.reversed?' ↺':''}</span>`
+  ).join('');
+  return `<div class="yesno-box" style="background:${v.bg};border-color:${v.border}">
+    <div style="font-size:1.8rem;margin-bottom:.2rem">${v.icon}</div>
+    <div class="yesno-verdict" style="color:${v.color}">${v.verdict}</div>
+    <p class="yesno-desc">${v.sub}</p>
+    <div class="yesno-meter">${dots}</div>
+    <div class="yesno-card-row">${cardTags}</div>
+    <p style="font-size:.74rem;color:var(--dim);margin-top:.6rem;line-height:1.6">
+      คำตอบนี้อ้างอิงจากพลังงานไพ่ทุกใบรวมกัน — อ่านความหมายแต่ละใบด้านล่างเพื่อความเข้าใจที่ลึกขึ้น
+    </p>
+  </div>`;
+}
+
+/* ---------- Domain summary (สรุปรายด้าน) ---------- */
+function buildDomainSummary(cards){
+  const DOMAINS=[
+    {key:'love',   icon:'💞', label:'ความรัก'},
+    {key:'work',   icon:'💼', label:'การงาน & การเงิน'},
+    {key:'health', icon:'🌿', label:'สุขภาพ'},
+  ];
+  const TONE_POS={text:'พลังงานดี',   color:'#7ed87a', bg:'rgba(126,216,122,.12)', border:'rgba(126,216,122,.3)'};
+  const TONE_MIX={text:'ผสมผสาน',   color:'#d4af37', bg:'rgba(212,175,55,.1)',  border:'rgba(212,175,55,.3)'};
+  const TONE_NEG={text:'ต้องใส่ใจ',  color:'#f08a6a', bg:'rgba(240,138,106,.1)', border:'rgba(240,138,106,.25)'};
+
+  const cards_html=DOMAINS.map(({key, icon, label})=>{
+    const entries=cards.map(c=>{
+      const rv=c.reversed;
+      const raw=rv?(c[key]&&c[key][1]):(c[key]&&c[key][0]);
+      return raw?{name:c.name_th, text:firstSent(raw), rv}:null;
+    }).filter(Boolean);
+    if(!entries.length) return '';
+
+    const posCount=entries.filter(e=>!e.rv).length;
+    const ratio=posCount/entries.length;
+    const tone=ratio>=0.67?TONE_POS:ratio>=0.34?TONE_MIX:TONE_NEG;
+
+    // Build a flowing synthesis paragraph
+    const parts=entries.map((e,i)=>{
+      const prefix=i===0?'':(i===entries.length-1?' และ':' ');
+      return `${prefix}${e.text.replace(/^(ด้าน[^ ]+ — |ด้าน[^ ]+|การงาน[^ ]* — |สุขภาพ — )/,'')}`;
+    });
+    const body=parts.join('');
+
+    const ctags=entries.map(e=>
+      `<span class="domain-sum-ctag">${e.name}${e.rv?' ↺':''}</span>`
+    ).join('');
+
+    return `<div class="domain-sum-card">
+      <div class="domain-sum-head">
+        <span class="domain-sum-label">${icon} ${label}</span>
+        <span class="domain-tone" style="color:${tone.color};border-color:${tone.border};background:${tone.bg}">${tone.text}</span>
+      </div>
+      <p class="domain-sum-body">${body}</p>
+      <div class="domain-sum-cards">${ctags}</div>
+    </div>`;
+  }).join('');
+
+  if(!cards_html.trim()) return '';
+  return `<h3>◎ สรุปรายด้าน — จากทุกใบที่เปิด</h3><div class="domain-sum-grid">${cards_html}</div>`;
+}
 
 /* ---------- Share Reading ---------- */
 function loadImg(src){

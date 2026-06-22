@@ -274,6 +274,27 @@ h1.title{font-size:clamp(2rem,7vw,3.4rem);margin-bottom:.3rem}
 }
 @media print{#stars,.btn,.btn-ghost,.tab-bar{display:none!important}.screen.active{background:white;color:black}}
 
+/* === YES/NO VERDICT === */
+.yesno-box{max-width:780px;width:100%;border-radius:18px;padding:1.4rem 1.6rem;margin-bottom:1.2rem;text-align:center;border:1px solid}
+.yesno-verdict{font-family:'Cinzel Decorative',serif;font-size:2.2rem;font-weight:700;letter-spacing:2px;margin:.3rem 0}
+.yesno-desc{font-size:.92rem;color:var(--text2);margin:.4rem 0 .8rem;line-height:1.7}
+.yesno-meter{display:flex;gap:.4rem;justify-content:center;margin:.6rem 0 .4rem}
+.yesno-dot{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.25)}
+.yesno-card-row{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-top:.6rem}
+.yesno-card-tag{font-size:.72rem;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
+
+/* === DOMAIN SUMMARY === */
+.domain-sum-section{max-width:780px;width:100%;margin-top:1.4rem}
+.domain-sum-section h3{font-family:'Cinzel',serif;color:var(--gold-l);font-size:1rem;margin-bottom:1rem;letter-spacing:2px;text-align:center}
+.domain-sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.8rem}
+.domain-sum-card{background:linear-gradient(150deg,rgba(28,28,72,.6),rgba(21,21,58,.4));border:1px solid rgba(212,175,55,.18);border-radius:14px;padding:1rem 1.1rem}
+.domain-sum-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
+.domain-sum-label{font-family:'Cinzel',serif;color:var(--gold-l);font-size:.82rem;font-weight:600;letter-spacing:.5px;flex:1}
+.domain-tone{font-size:.7rem;padding:2px 8px;border-radius:12px;font-weight:600;border:1px solid;letter-spacing:.3px}
+.domain-sum-body{color:var(--text);font-size:.86rem;line-height:1.8;font-weight:300}
+.domain-sum-cards{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem}
+.domain-sum-ctag{font-size:.68rem;color:var(--dim);border:1px solid rgba(212,175,55,.15);border-radius:10px;padding:1px 7px}
+
 /* === WALLPAPER MODAL === */
 .wp-modal-bg{position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(10px)}
 .wp-modal{background:linear-gradient(160deg,#1a0c36,#0d0824);border:1px solid rgba(156,60,224,.45);border-radius:20px;max-width:380px;width:100%;padding:1.6rem 1.4rem 1.4rem;position:relative;max-height:92vh;overflow-y:auto;text-align:center;box-shadow:0 24px 64px rgba(90,20,160,.7)}
@@ -544,7 +565,9 @@ h1.title{font-size:clamp(2rem,7vw,3.4rem);margin-bottom:.3rem}
     <p class="date" id="reading-date"></p>
     <div id="question-display" class="question-display" style="display:none"></div>
   </div>
+  <div id="yesno-verdict" style="display:none"></div>
   <div class="reading-list" id="reading-list"></div>
+  <div id="domain-summary" class="domain-sum-section" style="display:none"></div>
   <div class="summary" id="summary"></div>
   <div class="actions">
     <button class="btn" onclick="goHome()">ทำนายใหม่</button>
@@ -652,7 +675,7 @@ h1.title{font-size:clamp(2rem,7vw,3.4rem);margin-bottom:.3rem}
 </div>
 
 </div>
-<script src="deck.js?v=16"></script>
-<script src="app.js?v=16"></script>
+<script src="deck.js?v=17"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>
