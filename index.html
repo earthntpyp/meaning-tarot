@@ -274,6 +274,32 @@ h1.title{font-size:clamp(2rem,7vw,3.4rem);margin-bottom:.3rem}
 }
 @media print{#stars,.btn,.btn-ghost,.tab-bar{display:none!important}.screen.active{background:white;color:black}}
 
+/* === QUICK READ (สรุปใน 30 วิ) === */
+.quick-read{max-width:780px;width:100%;background:linear-gradient(135deg,rgba(212,175,55,.12),rgba(90,20,160,.12));
+  border:1px solid rgba(212,175,55,.3);border-radius:18px;padding:1.2rem 1.4rem;margin-bottom:1.2rem}
+.qr-head{display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem}
+.qr-title{font-family:'Cinzel',serif;color:var(--gold-l);font-size:.85rem;letter-spacing:2px;flex:1}
+.qr-energy{font-size:.78rem;padding:3px 12px;border-radius:20px;font-weight:700;border:1px solid}
+.qr-takeaway{color:var(--text);font-size:.95rem;line-height:1.85;margin-bottom:.8rem;font-weight:400}
+.qr-chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.qr-chip{display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--text2);
+  background:rgba(5,5,15,.4);border:1px solid rgba(212,175,55,.18);border-radius:12px;padding:.45rem .8rem}
+.qr-chip b{color:var(--gold-l);font-weight:600}
+.qr-chip .qr-swatch{width:14px;height:14px;border-radius:50%;border:1px solid rgba(255,255,255,.3)}
+
+/* === COLLAPSIBLE ADVANCED SECTIONS === */
+details.adv{margin:.6rem 0;border:1px solid rgba(212,175,55,.14);border-radius:12px;
+  background:rgba(255,255,255,.02);overflow:hidden}
+details.adv summary{cursor:pointer;padding:.7rem 1rem;font-family:'Cinzel',serif;
+  font-size:.85rem;color:var(--gold-l);list-style:none;display:flex;align-items:center;gap:.5rem;
+  transition:.2s;user-select:none}
+details.adv summary::-webkit-details-marker{display:none}
+details.adv summary::after{content:'▾';margin-left:auto;color:var(--dim);transition:.25s}
+details.adv[open] summary::after{transform:rotate(180deg)}
+details.adv summary:hover{background:rgba(212,175,55,.05)}
+details.adv .adv-body{padding:.2rem 1rem .9rem;color:var(--text2);font-size:.88rem;line-height:1.8;font-weight:300}
+.adv-hint{font-size:.72rem;color:var(--dim);font-weight:300;letter-spacing:.3px;margin-left:.3rem}
+
 /* === YES/NO VERDICT === */
 .yesno-box{max-width:780px;width:100%;border-radius:18px;padding:1.4rem 1.6rem;margin-bottom:1.2rem;text-align:center;border:1px solid}
 .yesno-verdict{font-family:'Cinzel Decorative',serif;font-size:2.2rem;font-weight:700;letter-spacing:2px;margin:.3rem 0}
@@ -566,6 +592,7 @@ h1.title{font-size:clamp(2rem,7vw,3.4rem);margin-bottom:.3rem}
     <div id="question-display" class="question-display" style="display:none"></div>
   </div>
   <div id="yesno-verdict" style="display:none"></div>
+  <div id="quick-read" style="display:none"></div>
   <div class="reading-list" id="reading-list"></div>
   <div id="domain-summary" class="domain-sum-section" style="display:none"></div>
   <div class="summary" id="summary"></div>
@@ -675,7 +702,7 @@ h1.title{font-size:clamp(2rem,7vw,3.4rem);margin-bottom:.3rem}
 </div>
 
 </div>
-<script src="deck.js?v=17"></script>
-<script src="app.js?v=17"></script>
+<script src="deck.js?v=18"></script>
+<script src="app.js?v=18"></script>
 </body>
 </html>

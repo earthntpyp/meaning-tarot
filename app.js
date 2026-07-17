@@ -502,6 +502,13 @@ function showReading(){
     yesnoEl.innerHTML='';
   }
 
+  // Quick Read — all spreads
+  const qrEl=document.getElementById('quick-read');
+  qrEl.innerHTML=buildQuickRead(state.cards);
+  qrEl.style.display='flex';
+  qrEl.style.flexDirection='column';
+  qrEl.style.alignItems='center';
+
   // Domain summary — all spreads
   const domEl=document.getElementById('domain-summary');
   const domHTML=buildDomainSummary(state.cards);
@@ -556,11 +563,13 @@ function buildSummary(){
         <br><small style="opacity:.7">${c1n} + ${c2n}</small>
       </div>`);
     }
-    dignityHtml=`<div class="methodology-section">
-      <b style="color:var(--gold-l)">⚖️ ศักดิ์ธาตุ (Elemental Dignities)</b>
-      <p style="opacity:.75;font-size:.85rem;margin:.3rem 0 .6rem">ไพ่ที่อยู่ข้างกันส่งผลต่อกัน — ธาตุที่เสริมกันทำให้ความหมายแข็งแกร่งขึ้น ธาตุที่ต้านกันทำให้ความหมายอ่อนลงหรือซับซ้อนขึ้น</p>
-      ${pairs.join('')}
-    </div>`;
+    dignityHtml=`<details class="adv">
+      <summary>⚖️ พลังไพ่ข้างกัน เสริมหรือต้านกัน? <span class="adv-hint">แตะเพื่อดู</span></summary>
+      <div class="adv-body">
+        <p style="opacity:.75;font-size:.85rem;margin:.3rem 0 .6rem">ไพ่ที่อยู่ข้างกันส่งผลต่อกัน — ธาตุที่เสริมกันทำให้ความหมายแข็งแกร่งขึ้น ธาตุที่ต้านกันทำให้ความหมายอ่อนลงหรือซับซ้อนขึ้น</p>
+        ${pairs.join('')}
+      </div>
+    </details>`;
   }
 
   // ── 3. ไพ่กลับหัว (Reversed analysis) ─────────────────
@@ -657,24 +666,25 @@ function buildSummary(){
   }).join('');
 
   return `
-    <h3>🔮 บทสรุปคำทำนาย — ศาสตร์แห่งไพ่ทาโร่</h3>
+    <h3>🔮 บทสรุปคำทำนาย</h3>
     <p><b style="color:var(--gold-l)">ธาตุเด่นในการอ่านครั้งนี้:</b> ${domElText}</p>
     ${suitWarning}
     <div class="energy-tags">${tags}</div>
-    ${dignityHtml}
     ${narrativeHtml}
-    <div class="methodology-section">
-      <b style="color:var(--gold-l)">↺ ไพ่กลับหัว</b>
-      <p>${revText}</p>
-    </div>
-    <div class="methodology-section">
-      <b style="color:var(--gold-l)">★ ไพ่ชุดใหญ่ vs ชุดเล็ก</b>
-      <p>${majorText}</p>
-    </div>
-    <div class="methodology-section">
-      <b style="color:var(--gold-l)">🔢 เลขศาสตร์</b>
-      <p>${numText}</p>
-    </div>`;
+    <p style="font-size:.78rem;color:var(--dim);margin:.9rem 0 .3rem;letter-spacing:.5px">🔍 เจาะลึกด้วยศาสตร์ไพ่ทาโรต์ — แตะหัวข้อเพื่ออ่าน</p>
+    ${dignityHtml}
+    <details class="adv">
+      <summary>↺ ไพ่กลับหัวบอกอะไร? <span class="adv-hint">แตะเพื่อดู</span></summary>
+      <div class="adv-body"><p>${revText}</p></div>
+    </details>
+    <details class="adv">
+      <summary>★ เรื่องนี้ใหญ่แค่ไหน? (Major vs Minor) <span class="adv-hint">แตะเพื่อดู</span></summary>
+      <div class="adv-body"><p>${majorText}</p></div>
+    </details>
+    <details class="adv">
+      <summary>🔢 เลขศาสตร์ของการอ่านครั้งนี้ <span class="adv-hint">แตะเพื่อดู</span></summary>
+      <div class="adv-body"><p>${numText}</p></div>
+    </details>`;
 }
 
 /* ---------- Helpers ---------- */
@@ -729,6 +739,60 @@ function buildYesNoHTML(v, cards){
     <p style="font-size:.74rem;color:var(--dim);margin-top:.6rem;line-height:1.6">
       คำตอบนี้อ้างอิงจากพลังงานไพ่ทุกใบรวมกัน — อ่านความหมายแต่ละใบด้านล่างเพื่อความเข้าใจที่ลึกขึ้น
     </p>
+  </div>`;
+}
+
+/* ---------- Quick Read — สรุปเข้าใจใน 30 วินาที ---------- */
+const EL_LUCKY={
+  fire:  {color:'แดง / ส้ม / ทอง',      swatch:'#f06a2a', day:'อังคาร'},
+  water: {color:'ฟ้า / น้ำเงิน / เงิน',  swatch:'#39a0d8', day:'จันทร์'},
+  air:   {color:'เหลือง / ครีม / ขาว',   swatch:'#c0a050', day:'พุธ'},
+  earth: {color:'เขียว / น้ำตาล / ทอง',  swatch:'#52a84e', day:'พฤหัสบดี'},
+  spirit:{color:'ม่วง / ทอง / ขาว',      swatch:'#9c3ce0', day:'เสาร์'},
+};
+
+function buildQuickRead(cards){
+  // Overall energy from same scoring as yes/no
+  const v=yesNoVerdict(cards);
+  const energy= v.ratio>0.35 ? {text:'ดีมาก 🌟', color:'#7ed87a', border:'rgba(126,216,122,.4)', bg:'rgba(126,216,122,.12)'}
+    : v.ratio>0 ?            {text:'ค่อนข้างดี ✨', color:'#c8e6a0', border:'rgba(200,230,160,.35)', bg:'rgba(200,230,160,.08)'}
+    : v.ratio>-0.35 ?        {text:'ทรงตัว ⚖️', color:'#d4af37', border:'rgba(212,175,55,.4)', bg:'rgba(212,175,55,.1)'}
+    :                        {text:'ต้องระวัง 🌧', color:'#f08a6a', border:'rgba(240,138,106,.35)', bg:'rgba(240,138,106,.1)'};
+
+  // Dominant element
+  const elc={};
+  cards.forEach(c=>elc[c.el]=(elc[c.el]||0)+1);
+  const domEl=Object.entries(elc).sort((a,b)=>b[1]-a[1])[0][0];
+  const lucky=EL_LUCKY[domEl]||EL_LUCKY.spirit;
+  const elInfo=EL_INFO[domEl]||{icon:'✨',name:domEl};
+
+  // Lucky number via numerology (same reduction as buildSummary)
+  let sum=cards.reduce((s,c)=>s+Number(c.number),0);
+  let lifeNum=sum;
+  while(lifeNum>22){ lifeNum=String(lifeNum).split('').reduce((a,d)=>a+ +d,0); }
+
+  // One-sentence takeaway: strongest card (major first, upright first)
+  const key=[...cards].sort((a,b)=>
+    (b.type==='major')-(a.type==='major') || (a.reversed)-(b.reversed))[0];
+  const siteKW=SITE_HEADLINE[key.id];
+  const headline=siteKW?(key.reversed?siteKW.rev:siteKW.up):firstSent(key.reversed?key.rev:key.up);
+  const takeaway=`ไพ่เด่นของคุณคือ <b style="color:var(--gold-l)">${key.name_th}</b>${key.reversed?' (กลับหัว)':''} — ${headline}`;
+
+  const revCount=cards.filter(c=>c.reversed).length;
+
+  return `<div class="quick-read">
+    <div class="qr-head">
+      <span class="qr-title">⚡ อ่านเร็วใน 30 วินาที</span>
+      <span class="qr-energy" style="color:${energy.color};border-color:${energy.border};background:${energy.bg}">พลังงานรวม: ${energy.text}</span>
+    </div>
+    <p class="qr-takeaway">${takeaway}</p>
+    <div class="qr-chips">
+      <span class="qr-chip">${elInfo.icon} ธาตุเด่น <b>${elInfo.name.replace('ธาตุ','')}</b></span>
+      <span class="qr-chip"><span class="qr-swatch" style="background:${lucky.swatch}"></span> สีนำโชค <b>${lucky.color}</b></span>
+      <span class="qr-chip">🔢 เลขนำโชค <b>${lifeNum}</b></span>
+      <span class="qr-chip">📅 วันดี <b>วัน${lucky.day}</b></span>
+      ${revCount?`<span class="qr-chip">↺ กลับหัว <b>${revCount} ใบ</b></span>`:''}
+    </div>
   </div>`;
 }
 
