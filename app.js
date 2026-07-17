@@ -187,6 +187,31 @@ const SPREADS={
       {name:"ผลลัพธ์",hint:"แนวโน้มปลายทางหากเดินตามเส้นทางนี้"}
     ]
   },
+  love:{
+    title:"ดวงความรัก", icon:"💞", count:3, layout:"layout-3",
+    focus:"ตั้งจิตนึกถึงความสัมพันธ์หรือคนที่อยู่ในใจ",
+    positions:[
+      {name:"ตัวคุณ",hint:"พลังงานและความรู้สึกของคุณในความสัมพันธ์นี้"},
+      {name:"เขา / อีกฝ่าย",hint:"พลังงานและมุมมองของอีกฝ่ายที่มีต่อคุณ"},
+      {name:"ความสัมพันธ์",hint:"ทิศทางและแนวโน้มของความสัมพันธ์นี้"}
+    ]
+  },
+  celtic:{
+    title:"Celtic Cross", icon:"✚", count:10, layout:"layout-10",
+    focus:"การอ่านแบบลึกที่สุด 10 ใบ — ตั้งจิตกับเรื่องที่ต้องการเข้าใจอย่างถ่องแท้",
+    positions:[
+      {name:"สถานการณ์ปัจจุบัน",hint:"หัวใจของเรื่องที่กำลังเกิดขึ้น"},
+      {name:"อุปสรรค / สิ่งขวางกั้น",hint:"พลังงานที่ตัดผ่านสถานการณ์"},
+      {name:"รากฐาน",hint:"สิ่งที่อยู่ลึกใต้เรื่องนี้"},
+      {name:"อดีตที่เพิ่งผ่าน",hint:"พลังงานที่กำลังจางหาย"},
+      {name:"เป้าหมาย / สิ่งที่มุ่งหวัง",hint:"สิ่งที่ดีที่สุดที่เป็นไปได้"},
+      {name:"อนาคตอันใกล้",hint:"สิ่งที่กำลังเคลื่อนเข้ามา"},
+      {name:"ตัวคุณ",hint:"ท่าทีและพลังงานของคุณต่อเรื่องนี้"},
+      {name:"สิ่งแวดล้อม / คนรอบตัว",hint:"อิทธิพลภายนอกที่ส่งผล"},
+      {name:"ความหวังหรือความกลัว",hint:"สิ่งที่ใจคุณแอบรู้สึกอยู่"},
+      {name:"ผลลัพธ์",hint:"ปลายทางของเส้นทางนี้"}
+    ]
+  },
   question:{
     title:"ถามไพ่", icon:"🎯", count:3, layout:"layout-3",
     focus:"ตั้งจิตให้นิ่ง นึกถึงคำถามของคุณ แล้วพลิกไพ่ทีละใบ",
@@ -199,7 +224,25 @@ const SPREADS={
 };
 
 /* ---------- State ---------- */
-let state={type:null,spread:null,cards:[],flipped:0,question:''};
+let state={type:null,spread:null,cards:[],flipped:0,question:'',_restored:false,streak:0};
+
+/* ---------- Seeded RNG (daily card locks to the date) ---------- */
+function seededRng(seedStr){
+  let h=1779033703^seedStr.length;
+  for(let i=0;i<seedStr.length;i++){
+    h=Math.imul(h^seedStr.charCodeAt(i),3432918353);
+    h=h<<13|h>>>19;
+  }
+  return function(){
+    h=Math.imul(h^h>>>16,2246822507);
+    h=Math.imul(h^h>>>13,3266489909);
+    return ((h^=h>>>16)>>>0)/4294967296;
+  };
+}
+function todayKey(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 
 /* ---------- Utilities ---------- */
 function shuffle(a){
@@ -218,15 +261,40 @@ function show(id){
 function elLabel(el){return(ELEMENT_TH[el]||el);}
 
 /* ---------- Start a reading ---------- */
+function shuffleSeeded(a,rng){
+  a=a.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(rng()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function pickCards(spread,type){
+  if(type==='daily'){
+    // Daily card is locked to today's date — same card all day
+    const rng=seededRng('meaning-tarot-'+todayKey());
+    return shuffleSeeded(DECK,rng).slice(0,spread.count)
+      .map(c=>({...c, reversed:rng()<0.42}));
+  }
+  return shuffle(DECK).slice(0,spread.count)
+    .map(c=>({...c, reversed:Math.random()<0.42}));
+}
+
 function startReading(type){
   state.type=type;
   state.spread=SPREADS[type];
-  const picked=shuffle(DECK).slice(0,state.spread.count)
-    .map(c=>({...c, reversed:Math.random()<0.42}));
-  state.cards=picked;
+  state._restored=false;
+  state.cards=pickCards(state.spread,type);
   state.flipped=0;
   renderDraw();
   show('screen-draw');
+}
+
+function reshuffleCards(){
+  if(state.flipped>0||state.type==='daily') return;
+  state.cards=pickCards(state.spread,state.type);
+  renderDraw();
 }
 
 /* ---------- Render draw screen ---------- */
@@ -236,6 +304,10 @@ function renderDraw(){
   document.getElementById('draw-focus').textContent=sp.focus;
   document.getElementById('shuffle-note').style.display='';
   document.getElementById('btn-reveal').style.display='none';
+  const shufBtn=document.getElementById('btn-shuffle');
+  if(shufBtn) shufBtn.style.display=(state.type==='daily')?'none':'';
+  const dailyNote=document.getElementById('daily-lock-note');
+  if(dailyNote) dailyNote.style.display=(state.type==='daily')?'':'none';
 
   const wrap=document.getElementById('spread');
   wrap.className='spread '+sp.layout;
@@ -281,6 +353,10 @@ function flipCard(card){
   card.classList.remove('dealing');
   card.classList.add('flipped');
   state.flipped++;
+  if(state.flipped===1){
+    const shufBtn=document.getElementById('btn-shuffle');
+    if(shufBtn) shufBtn.style.display='none';
+  }
   if(state.flipped===state.cards.length){
     document.getElementById('shuffle-note').style.display='none';
     const b=document.getElementById('btn-reveal');
@@ -501,6 +577,12 @@ function showReading(){
     yesnoEl.style.display='none';
     yesnoEl.innerHTML='';
   }
+
+  // Streak — daily readings only
+  state.streak=(state.type==='daily'&&!state._restored)?updateStreak():0;
+
+  // Save to history
+  saveReadingToHistory();
 
   // Quick Read — all spreads
   const qrEl=document.getElementById('quick-read');
@@ -792,8 +874,22 @@ function buildQuickRead(cards){
       <span class="qr-chip">🔢 เลขนำโชค <b>${lifeNum}</b></span>
       <span class="qr-chip">📅 วันดี <b>วัน${lucky.day}</b></span>
       ${revCount?`<span class="qr-chip">↺ กลับหัว <b>${revCount} ใบ</b></span>`:''}
+      ${state.streak>1?`<span class="qr-chip">🔥 เปิดต่อเนื่อง <b>${state.streak} วัน</b></span>`:''}
+      ${_birthCompatChip(domEl)}
     </div>
   </div>`;
+}
+
+/* Birth card × today's element compatibility (daily only) */
+function _birthCompatChip(domEl){
+  if(state.type!=='daily') return '';
+  let bc;
+  try{ bc=JSON.parse(localStorage.getItem('mt_birthcard')); }catch(e){ return ''; }
+  if(!bc||!bc.el) return '';
+  const rel=(EL_DIGNITY[bc.el]||{})[domEl]||'neutral';
+  const label=rel==='amplify'?'⚡ พลังขยายแรง':rel==='support'?'💚 เสริมกันดี':rel==='oppose'?'⚠️ วันนี้ฝืนหน่อย':'⚖️ กลางๆ';
+  const bcCard=DECK.find(c=>c.id===bc.id);
+  return `<span class="qr-chip">🧬 เข้ากับไพ่ประจำตัว${bcCard?' ('+bcCard.name_th+')':''} <b>${label}</b></span>`;
 }
 
 /* ---------- Domain summary (สรุปรายด้าน) ---------- */
@@ -1041,6 +1137,224 @@ function closeShareModal(){
   document.getElementById('share-modal').style.display='none';
 }
 
+/* ===================================================================
+   HISTORY (ประวัติการทำนาย) — localStorage
+   =================================================================== */
+const HIST_KEY='mt_history';
+
+function getHistory(){
+  try{ return JSON.parse(localStorage.getItem(HIST_KEY))||[]; }catch(e){ return []; }
+}
+
+function saveReadingToHistory(){
+  if(state._restored) return; // viewing old reading — don't re-save
+  const entry={
+    t:Date.now(),
+    type:state.type,
+    q:state.question||'',
+    cards:state.cards.map(c=>[c.id, c.reversed?1:0]),
+  };
+  const h=getHistory();
+  h.unshift(entry);
+  if(h.length>50) h.length=50;
+  try{ localStorage.setItem(HIST_KEY,JSON.stringify(h)); }catch(e){}
+}
+
+function spreadFor(type){
+  if(type==='question1') return {
+    title:"ถามไพ่", icon:"🎯", count:1, layout:"layout-1",
+    focus:"หลับตา ตั้งจิตกับคำถามในใจ แล้วพลิกไพ่",
+    positions:[{name:"คำตอบ",hint:"ไพ่บอกตรงๆ สำหรับคำถามของคุณ"}]
+  };
+  return SPREADS[type];
+}
+
+function openHistory(){
+  const h=getHistory();
+  const list=document.getElementById('hist-list');
+  if(!h.length){
+    list.innerHTML='<p style="text-align:center;color:var(--dim);padding:2rem 0">ยังไม่มีประวัติการทำนาย<br>เปิดไพ่ครั้งแรกแล้วกลับมาดูได้ที่นี่</p>';
+  } else {
+    list.innerHTML=h.map((e,i)=>{
+      const sp=spreadFor(e.type)||{title:e.type,icon:'🎴'};
+      const d=new Date(e.t);
+      const dateStr=`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543} · ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const names=e.cards.map(([id,rv])=>{
+        const c=DECK.find(x=>x.id===id);
+        return c?(c.name_th+(rv?' ↺':'')):id;
+      }).join(' · ');
+      return `<div class="hist-item" onclick="viewHistory(${i})">
+        <div class="hist-item-top">
+          <span class="hist-icon">${sp.icon}</span>
+          <span class="hist-title">${sp.title}</span>
+          <span class="hist-date">${dateStr}</span>
+        </div>
+        <div class="hist-cards">${names}</div>
+      </div>`;
+    }).join('');
+  }
+  show('screen-history');
+}
+
+function viewHistory(i){
+  const e=getHistory()[i];
+  if(!e) return;
+  const sp=spreadFor(e.type);
+  if(!sp) return;
+  state.type=e.type;
+  state.spread=sp;
+  state.question=e.q||'';
+  state._restored=true;
+  state.cards=e.cards.map(([id,rv])=>{
+    const c=DECK.find(x=>x.id===id);
+    return c?{...c,reversed:!!rv}:null;
+  }).filter(Boolean);
+  showReading();
+}
+
+function clearHistory(){
+  if(!confirm('ลบประวัติการทำนายทั้งหมด?')) return;
+  localStorage.removeItem(HIST_KEY);
+  openHistory();
+}
+
+/* ===================================================================
+   STREAK (เปิดไพ่ต่อเนื่อง) — daily readings
+   =================================================================== */
+function updateStreak(){
+  const KEY='mt_streak';
+  let s;
+  try{ s=JSON.parse(localStorage.getItem(KEY))||{d:'',n:0}; }catch(e){ s={d:'',n:0}; }
+  const today=todayKey();
+  if(s.d===today) return s.n;
+  const y=new Date(); y.setDate(y.getDate()-1);
+  const yesterday=`${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`;
+  s.n=(s.d===yesterday)?s.n+1:1;
+  s.d=today;
+  try{ localStorage.setItem(KEY,JSON.stringify(s)); }catch(e){}
+  return s.n;
+}
+
+/* ===================================================================
+   SHARE LINK (แชร์ผลเป็นลิงก์)
+   =================================================================== */
+function buildShareLink(){
+  const payload={t:state.type, q:state.question||'', c:state.cards.map(c=>[c.id,c.reversed?1:0])};
+  const enc=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  return location.origin+location.pathname+'?r='+enc;
+}
+
+async function copyShareLink(){
+  const url=buildShareLink();
+  try{
+    await navigator.clipboard.writeText(url);
+    alert('คัดลอกลิงก์แล้ว — ส่งให้เพื่อนเปิดดูผลไพ่ของคุณได้เลย');
+  }catch(e){
+    prompt('คัดลอกลิงก์นี้:',url);
+  }
+}
+
+function tryRestoreFromLink(){
+  const m=location.search.match(/[?&]r=([^&]+)/);
+  if(!m) return false;
+  try{
+    const payload=JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    const sp=spreadFor(payload.t);
+    if(!sp||!payload.c||!payload.c.length) return false;
+    state.type=payload.t;
+    state.spread=sp;
+    state.question=payload.q||'';
+    state._restored=true;
+    state.cards=payload.c.map(([id,rv])=>{
+      const c=DECK.find(x=>x.id===id);
+      return c?{...c,reversed:!!rv}:null;
+    }).filter(Boolean);
+    if(!state.cards.length) return false;
+    showReading();
+    history.replaceState(null,'',location.pathname);
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ===================================================================
+   AI INTERPRETATION (Claude ตีความเฉพาะคุณ)
+   =================================================================== */
+async function askAI(){
+  const modal=document.getElementById('ai-modal');
+  const body=document.getElementById('ai-body');
+  modal.style.display='flex';
+  body.innerHTML='<div class="wp-spinner" style="margin:2rem auto"></div><p style="text-align:center;color:#c080f0;font-size:.85rem">Claude กำลังอ่านไพ่ของคุณ…</p>';
+
+  try{
+    const resp=await fetch('/api/interpret',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        type:state.type,
+        question:state.question||'',
+        cards:state.cards.map((c,i)=>({
+          position:state.spread.positions[i]?state.spread.positions[i].name:'',
+          name:c.name_th, nameEn:c.name_en, reversed:c.reversed,
+          keywords:(c.kw||[]).slice(0,4),
+          meaning:c.reversed?(c.rev||''):(c.up||''),
+        })),
+      })
+    });
+    const data=await resp.json();
+    if(!resp.ok) throw new Error(data.error||'ไม่สามารถตีความได้');
+    body.innerHTML='<div class="ai-text">'+data.text.replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>').replace(/^/,'<p>')+'</p></div>';
+  }catch(e){
+    body.innerHTML=`<p style="color:#f08a6a;text-align:center;padding:1rem">${e.message}</p>`;
+  }
+}
+
+function closeAiModal(){
+  document.getElementById('ai-modal').style.display='none';
+}
+
+/* ===================================================================
+   PUSH NOTIFICATIONS (แจ้งเตือนรายวัน)
+   =================================================================== */
+async function enableDailyPush(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)){
+    alert('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน\nบน iPhone: กด แชร์ → เพิ่มไปยังหน้าจอโฮม แล้วเปิดจากไอคอนแอปก่อน');
+    return;
+  }
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){ alert('การแจ้งเตือนถูกปิดไว้ — เปิดได้ใน ตั้งค่า > การแจ้งเตือน'); return; }
+    const keyResp=await fetch('/api/vapid-key');
+    if(!keyResp.ok) throw new Error('เซิร์ฟเวอร์ยังไม่ได้ตั้งค่าการแจ้งเตือน');
+    const {key}=await keyResp.json();
+    const reg=await navigator.serviceWorker.ready;
+    const sub=await reg.pushManager.subscribe({
+      userVisibleOnly:true,
+      applicationServerKey:urlBase64ToUint8Array(key),
+    });
+    const r=await fetch('/api/subscribe',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(sub)
+    });
+    if(!r.ok) throw new Error('บันทึกการแจ้งเตือนไม่สำเร็จ');
+    alert('🔔 เปิดการแจ้งเตือนแล้ว — ไพ่ประจำวันจะทักคุณทุกเช้า 9 โมง');
+  }catch(e){
+    alert('เปิดการแจ้งเตือนไม่สำเร็จ\n'+e.message);
+  }
+}
+
+function urlBase64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64);
+  return Uint8Array.from([...raw].map(ch=>ch.charCodeAt(0)));
+}
+
+/* ---------- Boot: service worker + share-link restore ---------- */
+if('serviceWorker' in navigator){
+  addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+addEventListener('DOMContentLoaded',()=>{ tryRestoreFromLink(); });
+
 /* ---------- Question modal ---------- */
 let _qCount=3; // default 3 cards
 
@@ -1057,7 +1371,9 @@ function selectQCount(n){
   document.getElementById('q-opt-3').classList.toggle('q-opt-selected', n===3);
 }
 function submitQuestion(){
-  state.question=''; // no text — user meditates silently
+  const qInput=document.getElementById('q-text');
+  state.question=qInput?qInput.value.trim():'';
+  state._restored=false;
   closeQuestionModal();
   // Dynamically set spread based on chosen count
   if(_qCount===1){
@@ -1176,6 +1492,9 @@ function renderBirthCard(dateStr, firstSum, primaryNum, secondaryNum, card1, car
         ${bcCardHTML(card2,'ไพ่รอง · เลข '+secondaryNum)}
       </div>`
     :`<div class="bc-cards-row">${bcCardHTML(card1,'ไพ่ประจำตัว · เลข '+primaryNum)}</div>`;
+
+  // Remember birth card for daily compatibility chip
+  try{ localStorage.setItem('mt_birthcard',JSON.stringify({id:card1.id,el:card1.el})); }catch(e){}
 
   document.getElementById('bc-result').innerHTML=`
     <div class="bc-num-badge">${isDual?primaryNum+' · '+secondaryNum:primaryNum}</div>
