@@ -1160,8 +1160,6 @@ function bcCardHTML(card, label){
   </div>`;
 }
 
-let _bcCards=[];
-
 function renderBirthCard(dateStr, firstSum, primaryNum, secondaryNum, card1, card2){
   const isDual=secondaryNum!==null;
   const calcSteps=isDual
@@ -1179,76 +1177,13 @@ function renderBirthCard(dateStr, firstSum, primaryNum, secondaryNum, card1, car
       </div>`
     :`<div class="bc-cards-row">${bcCardHTML(card1,'ไพ่ประจำตัว · เลข '+primaryNum)}</div>`;
 
-  // Store birth cards for wallpaper generation
-  _bcCards=[card1, card2].filter(Boolean);
-
   document.getElementById('bc-result').innerHTML=`
     <div class="bc-num-badge">${isDual?primaryNum+' · '+secondaryNum:primaryNum}</div>
     <p style="text-align:center;color:var(--text2);font-size:.85rem;margin-bottom:.6rem">${calcSteps}</p>
     ${dualNote}
-    ${cardsHtml}
-    <div style="display:flex;justify-content:center;margin-top:1.4rem">
-      <button class="btn-wp" onclick="generateWallpaperFromBirthCard()">✨ วอลเปเปอร์ประจำตัว</button>
-    </div>`;
+    ${cardsHtml}`;
   document.getElementById('bc-result').style.display='block';
   document.getElementById('bc-result').scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-async function generateWallpaperFromBirthCard(){
-  if(!_bcCards.length){ alert('กรุณาคำนวณไพ่ประจำตัวก่อน'); return; }
-
-  // Build card data in same format as reading wallpaper
-  const cardData=_bcCards.map(c=>{
-    const siteKW=SITE_HEADLINE[c.id];
-    const positiveMeaning=siteKW?siteKW.up:(c.up||'');
-    return {
-      id: c.id,
-      name: c.name_en,
-      nameTh: c.name_th,
-      keywords: (c.kw||[]).slice(0,4),
-      positiveMeaning: positiveMeaning.slice(0,80),
-      element: c.el,
-      reversed: false, // birth cards are always upright
-    };
-  });
-
-  // Dominant element from birth card(s)
-  const domEl=_bcCards[0].el;
-
-  // Show modal
-  const modal=document.getElementById('wp-modal');
-  const loading=document.getElementById('wp-loading');
-  const result=document.getElementById('wp-result');
-  modal.style.display='flex';
-  loading.style.display='flex';
-  result.style.display='none';
-  _startWpSteps();
-
-  try{
-    const resp=await fetch('/api/wallpaper',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({cards:cardData, element:domEl, context:'birthcard'})
-    });
-    const data=await resp.json();
-    if(!resp.ok) throw new Error(data.error||'ไม่สามารถสร้างภาพได้');
-
-    _stopWpSteps();
-    loading.style.display='none';
-    result.style.display='block';
-
-    const img=document.getElementById('wp-img');
-    const mime=data.mimeType||'image/png';
-    img.src=`data:${mime};base64,${data.image}`;
-    img.dataset.b64=data.image;
-    img.dataset.mime=mime;
-    const promptEl=document.getElementById('wp-prompt');
-    if(promptEl) promptEl.textContent=data.prompt||'';
-  }catch(e){
-    _stopWpSteps();
-    modal.style.display='none';
-    alert('ไม่สามารถสร้างวอลเปเปอร์ได้\n'+(e.message||'กรุณาลองใหม่'));
-  }
 }
 
 /* ===================================================================
@@ -1391,109 +1326,4 @@ function switchLibTab(btn, tabName){
   modal.querySelectorAll('.lib-modal-tab-pane').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
   modal.querySelector(`.lib-modal-tab-pane[data-tab="${tabName}"]`).classList.add('active');
-}
-
-/* ===================================================================
-   FEATURE 3 — WALLPAPER GENERATOR (วอลเปเปอร์นำโชค)
-   Claude (Co) generates the mystical prompt · Gemini Imagen renders it
-   =================================================================== */
-
-const _wpSteps=[
-  'กำลังอ่านสัญลักษณ์ในไพ่แต่ละใบ…',
-  'กำลังถ่ายทอดความหมายสู่ภาพ…',
-  'AI กำลังวาดพลังจักรวาล…',
-  'รอสักครู่ กำลังส่งพลังงานนำโชค…',
-];
-let _wpStepTimer=null;
-
-function _startWpSteps(){
-  let i=0;
-  const el=document.getElementById('wp-loading-step');
-  if(el) el.textContent=_wpSteps[0];
-  _wpStepTimer=setInterval(()=>{
-    i=(i+1)%_wpSteps.length;
-    if(el) el.textContent=_wpSteps[i];
-  },3500);
-}
-
-function _stopWpSteps(){
-  if(_wpStepTimer){ clearInterval(_wpStepTimer); _wpStepTimer=null; }
-}
-
-async function generateWallpaper(){
-  const cards=state.cards;
-  if(!cards||!cards.length){ alert('กรุณาทำนายก่อนสร้างวอลเปเปอร์'); return; }
-
-  // Dominant element
-  const elCount={};
-  cards.forEach(c=>elCount[c.el]=(elCount[c.el]||0)+1);
-  const domEl=Object.entries(elCount).sort((a,b)=>b[1]-a[1])[0][0];
-
-  // Rich card data for better image prompts
-  const cardData=cards.map(c=>{
-    const siteKW=SITE_HEADLINE[c.id];
-    const positiveMeaning=siteKW?siteKW.up:(c.up||'');
-    return {
-      id: c.id,
-      name: c.name_en,
-      nameTh: c.name_th,
-      keywords: (c.kw||[]).slice(0,4),
-      positiveMeaning: positiveMeaning.slice(0,80),
-      element: c.el,
-      reversed: c.reversed,
-    };
-  });
-
-  // Show modal in loading state
-  const modal=document.getElementById('wp-modal');
-  const loading=document.getElementById('wp-loading');
-  const result=document.getElementById('wp-result');
-  modal.style.display='flex';
-  loading.style.display='flex';
-  result.style.display='none';
-  _startWpSteps();
-
-  try{
-    const resp=await fetch('/api/wallpaper',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({cards:cardData, element:domEl})
-    });
-    const data=await resp.json();
-    if(!resp.ok) throw new Error(data.error||'ไม่สามารถสร้างภาพได้');
-
-    _stopWpSteps();
-    loading.style.display='none';
-    result.style.display='block';
-
-    const img=document.getElementById('wp-img');
-    const mime=data.mimeType||'image/png';
-    img.src=`data:${mime};base64,${data.image}`;
-    img.dataset.b64=data.image;
-    img.dataset.mime=mime;
-
-    const promptEl=document.getElementById('wp-prompt');
-    if(promptEl) promptEl.textContent=data.prompt||'';
-
-  }catch(e){
-    _stopWpSteps();
-    modal.style.display='none';
-    alert('ไม่สามารถสร้างวอลเปเปอร์ได้\n'+(e.message||'กรุณาลองใหม่'));
-  }
-}
-
-function downloadWallpaper(){
-  const img=document.getElementById('wp-img');
-  if(!img||!img.dataset.b64) return;
-  const mime=img.dataset.mime||'image/png';
-  const ext=mime.includes('jpeg')?'jpg':'png';
-  const a=document.createElement('a');
-  a.href=`data:${mime};base64,${img.dataset.b64}`;
-  a.download=`lucky-wallpaper-${Date.now()}.${ext}`;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-}
-
-function closeWpModal(){
-  _stopWpSteps();
-  document.getElementById('wp-modal').style.display='none';
 }

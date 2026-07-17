@@ -321,24 +321,6 @@ details.adv .adv-body{padding:.2rem 1rem .9rem;color:var(--text2);font-size:.88r
 .domain-sum-cards{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem}
 .domain-sum-ctag{font-size:.68rem;color:var(--dim);border:1px solid rgba(212,175,55,.15);border-radius:10px;padding:1px 7px}
 
-/* === WALLPAPER MODAL === */
-.wp-modal-bg{position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(10px)}
-.wp-modal{background:linear-gradient(160deg,#1a0c36,#0d0824);border:1px solid rgba(156,60,224,.45);border-radius:20px;max-width:380px;width:100%;padding:1.6rem 1.4rem 1.4rem;position:relative;max-height:92vh;overflow-y:auto;text-align:center;box-shadow:0 24px 64px rgba(90,20,160,.7)}
-.wp-modal-close{position:absolute;top:.8rem;right:1rem;background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer}
-.wp-modal-close:hover{color:#c080f0}
-.wp-modal-title{font-family:'Cinzel',serif;color:#c080f0;font-size:.88rem;letter-spacing:3px;margin-bottom:1.2rem;text-transform:uppercase}
-.wp-loading{display:flex;flex-direction:column;align-items:center;gap:1rem;padding:2rem 0}
-.wp-spinner{width:52px;height:52px;border:3px solid rgba(156,60,224,.2);border-top-color:#c080f0;border-radius:50%;animation:spin 1s linear infinite}
-.wp-loading-step{color:#c080f0;font-family:'Cinzel',serif;font-size:.82rem;letter-spacing:1px;animation:pulse 2s infinite}
-.wp-loading-sub{color:var(--dim);font-size:.76rem}
-.wp-result{display:none}
-.wp-img-wrap{border-radius:14px;overflow:hidden;margin:0 auto .9rem;max-width:200px;box-shadow:0 8px 32px rgba(90,20,160,.5);border:1px solid rgba(156,60,224,.4)}
-.wp-img-wrap img{width:100%;display:block}
-.wp-prompt-label{font-family:'Cinzel',serif;font-size:.68rem;color:rgba(156,60,224,.6);letter-spacing:2px;margin-bottom:.3rem;text-transform:uppercase}
-.wp-prompt{font-size:.7rem;color:var(--dim);line-height:1.55;max-height:64px;overflow:hidden;text-align:left;padding:.45rem .6rem;background:rgba(255,255,255,.03);border-radius:6px;margin-bottom:1rem}
-.btn-wp{font-family:'Cinzel',serif;background:linear-gradient(135deg,#7c28c0,#5014a0);color:#f0e8d8;border:none;padding:.85rem 2.2rem;border-radius:40px;font-size:1rem;font-weight:600;letter-spacing:1px;cursor:pointer;transition:.3s;box-shadow:0 6px 20px rgba(90,20,160,.4)}
-.btn-wp:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 10px 28px rgba(90,20,160,.65)}
-
 /* === SHARE MODAL === */
 .share-modal-bg{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:1rem}
 .share-modal{background:var(--bg2);border:1px solid rgba(212,175,55,.25);border-radius:16px;max-width:480px;width:100%;padding:1.4rem 1.2rem 1.2rem;position:relative;max-height:90vh;overflow-y:auto}
@@ -599,7 +581,6 @@ details.adv .adv-body{padding:.2rem 1rem .9rem;color:var(--text2);font-size:.88r
   <div class="actions">
     <button class="btn" onclick="goHome()">ทำนายใหม่</button>
     <button class="btn btn-ghost" id="btn-share" onclick="shareReading()">↗ แชร์ผลทำนาย</button>
-    <button class="btn-wp" onclick="generateWallpaper()">✨ วอลเปเปอร์นำโชค</button>
     <button class="btn btn-ghost" onclick="window.print()">พิมพ์</button>
   </div>
 
@@ -674,35 +655,8 @@ details.adv .adv-body{padding:.2rem 1rem .9rem;color:var(--text2);font-size:.88r
   <div class="lib-modal" id="lib-modal-inner"></div>
 </div>
 
-<!-- Wallpaper modal -->
-<div id="wp-modal" class="wp-modal-bg" style="display:none" onclick="if(event.target===this)closeWpModal()">
-  <div class="wp-modal">
-    <button class="wp-modal-close" onclick="closeWpModal()">✕</button>
-    <p class="wp-modal-title">✨ วอลเปเปอร์นำโชค</p>
-
-    <div id="wp-loading" class="wp-loading">
-      <div class="wp-spinner"></div>
-      <p class="wp-loading-step" id="wp-loading-step">กำลังเรียกพลังงานจักรวาล…</p>
-      <p class="wp-loading-sub">Claude + Gemini Imagen กำลังสร้างภาพ</p>
-    </div>
-
-    <div id="wp-result" class="wp-result">
-      <div class="wp-img-wrap">
-        <img id="wp-img" src="" alt="วอลเปเปอร์นำโชค">
-      </div>
-      <p class="wp-prompt-label">Prompt ที่ใช้สร้าง</p>
-      <p class="wp-prompt" id="wp-prompt"></p>
-      <div style="display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap">
-        <button class="btn-wp" onclick="downloadWallpaper()">⬇ บันทึกภาพ</button>
-        <button class="btn btn-ghost" onclick="generateWallpaper()">↺ สร้างใหม่</button>
-        <button class="btn btn-ghost" onclick="closeWpModal()">ปิด</button>
-      </div>
-    </div>
-  </div>
 </div>
-
-</div>
-<script src="deck.js?v=18"></script>
-<script src="app.js?v=18"></script>
+<script src="deck.js?v=19"></script>
+<script src="app.js?v=19"></script>
 </body>
 </html>
